@@ -9,20 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>archichexture-core</artifactId>
-    <packaging>jar</packaging>
+    <artifactId>archichexture-example</artifactId>
 
-    <dependencies>
-        <!-- internal libraries -->
-        <dependency>
-            <groupId>at.chex.archichexture</groupId>
-            <artifactId>archichexture-model</artifactId>
-        </dependency>
 
-        <!-- 3rd Party/JEE libraries -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-    </dependencies>
 </project>

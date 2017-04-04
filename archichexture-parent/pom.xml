@@ -28,7 +28,8 @@
         <version.slf4j>1.7.25</version.slf4j>
 
         <!-- 3rd Party Database support library -->
-        <version.querydsl>3.7.3</version.querydsl>
+        <version.persistence-api>2.1.1</version.persistence-api>
+        <version.querydsl>3.7.4</version.querydsl>
         <version.owner>1.0.9</version.owner>
     </properties>
 
@@ -63,11 +64,6 @@
                 <version>${version.rs-api}</version>
             </dependency>
             <dependency>
-                <groupId>javax.persistence</groupId>
-                <artifactId>persistence-api</artifactId>
-                <version>${version.persistence-api}</version>
-            </dependency>
-            <dependency>
                 <groupId>javax.inject</groupId>
                 <artifactId>javax.inject</artifactId>
                 <version>${version.inject}</version>
@@ -78,6 +74,13 @@
                 <version>${version.owner}</version>
             </dependency>
             <!-- JPA/Query Frameworks -->
+            <dependency>
+                <!-- This is needed in the queryDsl class generator -->
+                <groupId>org.eclipse.persistence</groupId>
+                <artifactId>javax.persistence</artifactId>
+                <version>${version.persistence-api}</version>
+                <scope>provided</scope>
+            </dependency>
             <dependency>
                 <groupId>com.mysema.querydsl</groupId>
                 <artifactId>querydsl-jpa</artifactId>

@@ -31,6 +31,14 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
         this.readonlyController = readonlyController;
     }
 
+    protected boolean isTokenValid(String token) {
+        return tokenCheck.getTokenResponseCode(token, false) == 0;
+    }
+
+    protected int getTokenResponseCode(String token, boolean resetTokenExpiration) {
+        return tokenCheck.getTokenResponseCode(token, resetTokenExpiration);
+    }
+
     @GET
     @Path("/")
     @Produces(MediaType.APPLICATION_JSON)

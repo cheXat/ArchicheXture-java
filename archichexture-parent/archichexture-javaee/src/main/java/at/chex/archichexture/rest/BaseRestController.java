@@ -8,7 +8,6 @@ import at.chex.archichexture.rest.config.RestConfigFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -29,8 +28,6 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
     private static final Logger log = LoggerFactory.getLogger(BaseRestController.class);
     private boolean initialized = false;
     private RestConfig restConfig;
-    @Inject
-    private BaseRepository<ENTITY> entityRepository;
 
     protected RestConfig getConfig() {
         return this.restConfig;
@@ -45,9 +42,7 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
         this.initialized = true;
     }
 
-    protected BaseRepository<ENTITY> getEntityRepository() {
-        return this.entityRepository;
-    }
+    protected abstract BaseRepository<ENTITY> getEntityRepository();
 
     protected Collection<BaseDto<ENTITY>> postProcessEntitiesCollectionBeforeReturn(Collection<BaseDto<ENTITY>> entityCollection) {
         return entityCollection;

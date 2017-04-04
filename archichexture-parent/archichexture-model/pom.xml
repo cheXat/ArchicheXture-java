@@ -13,16 +13,19 @@
     <packaging>jar</packaging>
 
     <dependencies>
-        <!-- internal libraries -->
-        <dependency>
-            <groupId>javax.persistence</groupId>
-            <artifactId>persistence-api</artifactId>
-        </dependency>
-
         <!-- 3rd Party/JEE libraries -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
+        </dependency>
+
+        <!-- Persistence/JPA libraries -->
+        <dependency>
+            <!-- This is needed in the queryDsl class generator -->
+            <groupId>org.eclipse.persistence</groupId>
+            <artifactId>javax.persistence</artifactId>
+            <version>2.0.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.mysema.querydsl</groupId>
@@ -37,4 +40,43 @@
             <artifactId>querydsl-apt</artifactId>
         </dependency>
     </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.mysema.maven</groupId>
+                <artifactId>maven-apt-plugin</artifactId>
+                <version>1.0.4</version>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>process</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>src/main/generated</outputDirectory>
+                            <processor>com.mysema.query.apt.jpa.JPAAnnotationProcessor</processor>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-source</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>src/main/generated</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

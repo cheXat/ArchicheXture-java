@@ -12,12 +12,13 @@
         <module>archichexture-core</module>
         <module>archichexture-model</module>
         <module>archichexture-example</module>
+        <module>archichexture-soa</module>
     </modules>
     <packaging>pom</packaging>
 
     <properties>
         <!-- JAVA Version definition -->
-        <version.java>1.6</version.java>
+        <version.java>1.7</version.java>
 
         <!-- Java-EE Libraries version definition -->
         <version.inject>1</version.inject>
@@ -31,6 +32,10 @@
         <version.persistence-api>2.1.1</version.persistence-api>
         <version.querydsl>3.7.4</version.querydsl>
         <version.owner>1.0.9</version.owner>
+        <version.gson>2.8.0</version.gson>
+
+        <!-- TEST Stuff -->
+        <version.junit>4.12</version.junit>
     </properties>
 
     <dependencyManagement>
@@ -73,6 +78,11 @@
                 <artifactId>owner</artifactId>
                 <version>${version.owner}</version>
             </dependency>
+            <dependency>
+                <groupId>com.google.code.gson</groupId>
+                <artifactId>gson</artifactId>
+                <version>${version.gson}</version>
+            </dependency>
             <!-- JPA/Query Frameworks -->
             <dependency>
                 <!-- This is needed in the queryDsl class generator -->
@@ -95,6 +105,13 @@
                 <groupId>com.mysema.querydsl</groupId>
                 <artifactId>querydsl-apt</artifactId>
                 <version>${version.querydsl}</version>
+            </dependency>
+            <!-- TEST Stuff -->
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${version.junit}</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>

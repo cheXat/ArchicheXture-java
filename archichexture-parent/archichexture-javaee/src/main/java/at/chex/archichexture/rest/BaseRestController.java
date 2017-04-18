@@ -17,7 +17,8 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * This is the main class to inherit from, when building web controllers. We suggest to use the implementations ( {@link TokenBaseRestController}, {@link } ) provided, that already inherit from here.
+ * This is the main class to inherit from, when building web controllers. We suggest to use the implementations ( {@link
+ * TokenBaseRestController}, {@link } ) provided, that already inherit from here.
  *
  * @author Jakob Galbavy <code>jg@chex.at</code>
  * @since 24/03/2017
@@ -42,15 +43,6 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
         this.initialized = true;
     }
 
-    protected abstract BaseRepository<ENTITY> getEntityRepository();
-
-    protected Collection<BaseDto<ENTITY>> postProcessEntitiesCollectionBeforeReturn(Collection<BaseDto<ENTITY>> entityCollection) {
-        return entityCollection;
-    }
-
-    protected abstract ENTITY updateOrCreateEntityFromParameters(
-            DTO formObject, ENTITY entity) throws IllegalArgumentException;
-
     protected Response internalExecutePUTRequest(DTO formParam) {
         log.debug("Create new entity for {}", formParam);
         try {
@@ -64,15 +56,8 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
         }
     }
 
-    /**
-     * Override this to add additional checks for the id
-     *
-     * @param id
-     * @return
-     */
-    protected boolean isIdAccepted(Long id) {
-        return (null != id && id > 0L);
-    }
+    protected abstract ENTITY updateOrCreateEntityFromParameters(
+            DTO formObject, ENTITY entity) throws IllegalArgumentException;
 
     /**
      * Override this to interfere with entity creation
@@ -83,7 +68,17 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
         return getEntityRepository().create();
     }
 
-    protected Response internalExecutePOSTRequest(Long id, String token, DTO formParam) {
+    protected abstract BaseRepository<ENTITY> getEntityRepository();
+
+    /**
+     * Execute update of an entity request
+     *
+     * @param id
+     * @param formParam
+     *
+     * @return
+     */
+    protected Response internalExecutePOSTRequest(Long id, DTO formParam) {
         log.debug("Update entity with id {} and formParam {}", id, formParam);
 
         if (!isIdAccepted(id)) {
@@ -91,7 +86,7 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
             return Response.status(Response.Status.EXPECTATION_FAILED).build();
         }
 
-        ENTITY loadedEntityById = loadEntityById(id, token);
+        ENTITY loadedEntityById = loadEntityById(id);
         if (null == loadedEntityById) {
             log.warn("Unable to load entity with ID {} in {}", id, getEntityRepository().getClass());
             return Response.status(Response.Status.EXPECTATION_FAILED).build();
@@ -107,23 +102,58 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
         }
     }
 
-    protected Response internalExecuteDELETERequest(Long id, String token) {
-        log.debug("Delete entity with id {}", id);
-        ENTITY entity = loadEntityById(id, token);
-        if (this.getEntityRepository().delete(entity)) {
-            return Response.ok().build();
-        }
-        return Response.status(Response.Status.PRECONDITION_FAILED).build();
+    /**
+     * Override this to add additional checks for the id
+     *
+     * @param id
+     *
+     * @return
+     */
+    protected boolean isIdAccepted(Long id) {
+        return (null != id && id > 0L);
     }
 
     /**
      * Override this to interfere in the loading process (e.g. load different entities according to id characteristics)
      *
      * @param id
+     *
      * @return
      */
-    protected ENTITY loadEntityById(Long id, String token) {
+    protected ENTITY loadEntityById(Long id) {
         return getEntityRepository().findEntityById(id);
+    }
+
+    protected Response internalExecuteDELETERequest(Long id) {
+        log.debug("Delete entity with id {}", id);
+        ENTITY entity = loadEntityById(id);
+        if (this.getEntityRepository().delete(entity)) {
+            return Response.ok().build();
+        }
+        return Response.status(Response.Status.PRECONDITION_FAILED).build();
+    }
+
+    protected Long handleIdBeforeProcessing(Long id) {
+        return id;
+    }
+
+    /**
+     * Execute the GET Request for the given id/token
+     *
+     * @param id
+     *
+     * @return
+     */
+    protected Response internalGETRequest(Long id) {
+        log.trace("Incoming request for id {}", id);
+
+        if (!isIdAccepted(id)) {
+            log.debug("Id {} was not accepted to process", id);
+            return Response.status(Response.Status.EXPECTATION_FAILED).build();
+        }
+
+        ENTITY entity = loadEntityById(id);
+        return Response.ok(transformToDto(entity)).build();
     }
 
     /**
@@ -131,46 +161,20 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
      * returning it after the webservice call.
      *
      * @param entity
+     *
      * @return
      */
     protected abstract BaseDto<ENTITY> transformToDto(ENTITY entity);
 
-    protected List<BaseDto<ENTITY>> transformToDto(List<ENTITY> entityList) {
-        List<BaseDto<ENTITY>> returnList = new ArrayList<BaseDto<ENTITY>>();
-        for (ENTITY e : entityList) {
-            BaseDto<ENTITY> entityBaseDto = transformToDto(e);
-            if (null != entityBaseDto) {
-                returnList.add(entityBaseDto);
-            }
-        }
-        return returnList;
-    }
-
-    protected Long handleIdBeforeProcessing(Long id) {
-        return id;
-    }
-
-    protected List<ENTITY> getAdditionalEntitiesForListRequest(
-            MultivaluedMap<String, String> pathParametersMap) {
-        return new ArrayList<ENTITY>();
-    }
-
-    protected Response internalGETRequest(Long id, String token) {
-        log.trace("Incoming request for id {}", id);
-        ENTITY entity = loadEntityById(id, token);
-        return Response.ok(transformToDto(entity)).build();
-    }
-
     /**
-     * Override this to enforce required parameters
+     * Process the GET List Request here.
      *
-     * @param parametersMap
+     * @param info
+     * @param limit
+     * @param offset
+     *
      * @return
      */
-    protected boolean isRequiredParametersSet(MultivaluedMap<String, String> parametersMap) {
-        return true;
-    }
-
     protected Response internalGETListRequest(UriInfo info, int limit, int offset) {
         log.trace("Incoming LIST request");
 
@@ -188,5 +192,43 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
         }
 
         return Response.ok(postProcessEntitiesCollectionBeforeReturn(transformToDto(entityList))).build();
+    }
+
+    /**
+     * Override this to enforce required parameters
+     *
+     * @param parametersMap
+     *
+     * @return
+     */
+    protected boolean isRequiredParametersSet(MultivaluedMap<String, String> parametersMap) {
+        return true;
+    }
+
+    /**
+     * Here you can add Entities, that should show up with this call, but wouldn't on the generic method.
+     *
+     * @param pathParametersMap
+     *
+     * @return
+     */
+    protected List<ENTITY> getAdditionalEntitiesForListRequest(
+            MultivaluedMap<String, String> pathParametersMap) {
+        return new ArrayList<ENTITY>();
+    }
+
+    protected Collection<BaseDto<ENTITY>> postProcessEntitiesCollectionBeforeReturn(Collection<BaseDto<ENTITY>> entityCollection) {
+        return entityCollection;
+    }
+
+    protected List<BaseDto<ENTITY>> transformToDto(List<ENTITY> entityList) {
+        List<BaseDto<ENTITY>> returnList = new ArrayList<BaseDto<ENTITY>>();
+        for (ENTITY e : entityList) {
+            BaseDto<ENTITY> entityBaseDto = transformToDto(e);
+            if (null != entityBaseDto) {
+                returnList.add(entityBaseDto);
+            }
+        }
+        return returnList;
     }
 }

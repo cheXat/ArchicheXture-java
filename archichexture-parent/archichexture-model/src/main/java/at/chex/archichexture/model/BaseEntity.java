@@ -1,9 +1,12 @@
 package at.chex.archichexture.model;
 
+import com.google.common.base.MoreObjects;
+
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
+import javax.xml.bind.annotation.XmlElement;
 import java.io.Serializable;
 
 /**
@@ -24,6 +27,7 @@ public abstract class BaseEntity implements Serializable {
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @XmlElement(name = "id")
     private Long id;
 
     /**
@@ -38,7 +42,8 @@ public abstract class BaseEntity implements Serializable {
     /**
      * Set the primary key of this entity
      *
-     * @param id the new id
+     * @param id
+     *         the new id
      */
     public void setId(Long id) {
         this.id = id;
@@ -51,5 +56,12 @@ public abstract class BaseEntity implements Serializable {
      */
     public boolean isNew() {
         return null == this.id || this.id < 1L;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("id", id)
+                .toString();
     }
 }

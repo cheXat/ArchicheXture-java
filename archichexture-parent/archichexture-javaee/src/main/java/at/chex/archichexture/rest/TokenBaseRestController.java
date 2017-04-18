@@ -13,7 +13,11 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 /**
- * @author Jakob Galbavy <code>jg@chex.at</code>
+ * @param <ENTITY>
+ * @param <DTO>
+ *
+ * @author cheX GmbH Austria {@literal chex@chex.at}
+ * @author Jakob Galbavy {@literal jg@chex.at}
  * @since 27/03/2017
  */
 public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO extends BaseDto<ENTITY>> extends BaseRestController<ENTITY, DTO> {
@@ -21,22 +25,25 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
     private TokenCheck tokenCheck;
     private boolean readonlyController = true;
 
+    /**
+     * Ensure, that one of the init methods is called before handling any requests
+     *
+     * @param tokenCheck
+     */
     public void init(TokenCheck tokenCheck) {
         this.init(tokenCheck, true);
     }
 
+    /**
+     * Ensure, that one of the init methods is called before handling any requests
+     *
+     * @param tokenCheck
+     * @param readonlyController
+     */
     public void init(TokenCheck tokenCheck, boolean readonlyController) {
         super.init();
         this.tokenCheck = tokenCheck;
         this.readonlyController = readonlyController;
-    }
-
-    protected boolean isTokenValid(String token) {
-        return tokenCheck.getTokenResponseCode(token, false) == 0;
-    }
-
-    protected int getTokenResponseCode(String token, boolean resetTokenExpiration) {
-        return tokenCheck.getTokenResponseCode(token, resetTokenExpiration);
     }
 
     @GET
@@ -54,12 +61,41 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
 
-        int tokenStatusResponseCode = tokenCheck.getTokenResponseCode(token, resetTokenTimes);
+        int tokenStatusResponseCode = getTokenResponseCode(token, resetTokenTimes);
         if (tokenStatusResponseCode > 0) {
             return Response.status(tokenStatusResponseCode).build();
         }
 
-        return internalGETListRequest(info, limit, offset);
+        return internalGETListRequest(info, token, limit, offset);
+    }
+
+    /**
+     * This returns the correct HTTP:ResponseCode. If 0, this is interpreted as "everything's ok". Any other value will
+     * be returned as the HTTP:Result.
+     *
+     * @param token
+     * @param resetTokenExpiration
+     *
+     * @return
+     */
+    protected int getTokenResponseCode(String token, boolean resetTokenExpiration) {
+        log.debug("Checking validity of token:{}", token);
+        return tokenCheck.getTokenResponseCode(token, resetTokenExpiration);
+    }
+
+    /**
+     * Process the GET List Request here.
+     *
+     * @param info
+     * @param limit
+     * @param offset
+     *
+     * @return
+     */
+    protected Response internalGETListRequest(UriInfo info, String token, int limit, int offset) {
+        log.trace("Incoming LIST request for token {}", token);
+
+        return super.internalGETListRequest(info, limit, offset);
     }
 
     @GET
@@ -75,11 +111,24 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
 
-        int tokenStatusResponseCode = tokenCheck.getTokenResponseCode(token, resetTokenTimes);
+        int tokenStatusResponseCode = getTokenResponseCode(token, resetTokenTimes);
         if (tokenStatusResponseCode > 0) {
             return Response.status(tokenStatusResponseCode).build();
         }
         return internalGETRequest(id, token);
+    }
+
+    /**
+     * Execute the GET Request for the given id/token
+     *
+     * @param id
+     * @param token
+     *
+     * @return
+     */
+    protected Response internalGETRequest(Long id, String token) {
+        log.trace("Incoming request for id {} with token {}", id, token);
+        return super.internalGETRequest(id);
     }
 
     @POST
@@ -100,7 +149,7 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
             return Response.status(Response.Status.BAD_REQUEST).build();
         }
 
-        int tokenStatusResponseCode = tokenCheck.getTokenResponseCode(token, resetTokenTimes);
+        int tokenStatusResponseCode = getTokenResponseCode(token, resetTokenTimes);
         if (tokenStatusResponseCode > 0) {
             return Response.status(tokenStatusResponseCode).build();
         }
@@ -127,12 +176,26 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
             return Response.status(Response.Status.BAD_REQUEST).build();
         }
 
-        int tokenStatusResponseCode = tokenCheck.getTokenResponseCode(token, resetTokenTimes);
+        int tokenStatusResponseCode = getTokenResponseCode(token, resetTokenTimes);
         if (tokenStatusResponseCode > 0) {
             return Response.status(tokenStatusResponseCode).build();
         }
 
         return internalExecutePOSTRequest(id, token, formParam);
+    }
+
+    /**
+     * Process the update-entity event
+     *
+     * @param id
+     * @param token
+     * @param formParam
+     *
+     * @return
+     */
+    protected Response internalExecutePOSTRequest(Long id, String token, DTO formParam) {
+        log.debug("Update entity with id {} for token {}. FormParams: {}", id, token, formParam);
+        return super.internalExecutePOSTRequest(id, formParam);
     }
 
     @DELETE
@@ -152,11 +215,54 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
             return Response.status(Response.Status.BAD_REQUEST).build();
         }
 
-        int tokenStatusResponseCode = tokenCheck.getTokenResponseCode(token, resetTokenTimes);
+        int tokenStatusResponseCode = getTokenResponseCode(token, resetTokenTimes);
         if (tokenStatusResponseCode > 0) {
             return Response.status(tokenStatusResponseCode).build();
         }
 
-        return internalExecuteDELETERequest(id, token);
+        return internalExecuteDELETERequest(id, token, resetTokenTimes);
+    }
+
+    /**
+     * Delete the entity with the given id
+     *
+     * @param id
+     * @param token
+     *
+     * @return
+     */
+    protected Response internalExecuteDELETERequest(Long id, String token, boolean resetTokenTimes) {
+        if (!this.isInitialized()) {
+            log.error("Uninitialized Rest Controller! Call init() before doing anything else!");
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+        }
+
+        if (this.readonlyController) {
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        }
+
+        int tokenStatusResponseCode = getTokenResponseCode(token, resetTokenTimes);
+        if (tokenStatusResponseCode > 0) {
+            return Response.status(tokenStatusResponseCode).build();
+        }
+
+
+        log.debug("Delete entity with id {} for token {}", id, token);
+        ENTITY entity = loadEntityById(id, token);
+        if (this.getEntityRepository().delete(entity)) {
+            return Response.ok().build();
+        }
+        return Response.status(Response.Status.PRECONDITION_FAILED).build();
+    }
+
+    /**
+     * Override this to interfere in the loading process (e.g. load different entities according to id characteristics)
+     *
+     * @param id
+     *
+     * @return
+     */
+    protected ENTITY loadEntityById(Long id, String token) {
+        return super.loadEntityById(id);
     }
 }

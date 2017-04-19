@@ -164,7 +164,7 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
      *
      * @return
      */
-    protected abstract BaseDto<ENTITY> transformToDto(ENTITY entity);
+    protected abstract DTO transformToDto(ENTITY entity);
 
     /**
      * Process the GET List Request here.
@@ -217,14 +217,14 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
         return new ArrayList<ENTITY>();
     }
 
-    protected Collection<BaseDto<ENTITY>> postProcessEntitiesCollectionBeforeReturn(Collection<BaseDto<ENTITY>> entityCollection) {
+    protected Collection<DTO> postProcessEntitiesCollectionBeforeReturn(Collection<DTO> entityCollection) {
         return entityCollection;
     }
 
-    protected List<BaseDto<ENTITY>> transformToDto(List<ENTITY> entityList) {
-        List<BaseDto<ENTITY>> returnList = new ArrayList<BaseDto<ENTITY>>();
+    protected List<DTO> transformToDto(List<ENTITY> entityList) {
+        List<DTO> returnList = new ArrayList<DTO>();
         for (ENTITY e : entityList) {
-            BaseDto<ENTITY> entityBaseDto = transformToDto(e);
+            DTO entityBaseDto = transformToDto(e);
             if (null != entityBaseDto) {
                 returnList.add(entityBaseDto);
             }

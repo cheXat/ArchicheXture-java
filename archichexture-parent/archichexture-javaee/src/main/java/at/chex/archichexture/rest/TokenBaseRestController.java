@@ -60,6 +60,7 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
             log.error("Uninitialized Rest Controller! Call init() before doing anything else!");
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
+        log.trace("GET:/ with Parameters. reset_token:{}, token:{}, limit:{}, offset:{}", resetTokenTimes, token, limit, offset);
 
         int tokenStatusResponseCode = getTokenResponseCode(token, resetTokenTimes);
         if (tokenStatusResponseCode > 0) {
@@ -110,6 +111,7 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
             log.error("Uninitialized Rest Controller! Call init() before doing anything else!");
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
+        log.trace("GET:/id with Parameters. id:{}, reset_token:{}, token:{}", id, resetTokenTimes, token);
 
         int tokenStatusResponseCode = getTokenResponseCode(token, resetTokenTimes);
         if (tokenStatusResponseCode > 0) {
@@ -131,7 +133,7 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
         return super.internalGETRequest(id);
     }
 
-    @POST
+    @PUT
     @Path("/")
     @Consumes("application/x-www-form-urlencoded")
     @Produces(MediaType.APPLICATION_JSON)
@@ -171,6 +173,7 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
             log.error("Uninitialized Rest Controller! Call init() before doing anything else!");
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
+        log.trace("POST:/id with Parameters. id:{}, dto:{}, reset_token:{}, token:{}", id, formParam, resetTokenTimes, token);
 
         if (this.readonlyController) {
             return Response.status(Response.Status.BAD_REQUEST).build();

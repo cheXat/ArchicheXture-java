@@ -2,6 +2,8 @@ package at.chex.archichexture.dto;
 
 import at.chex.archichexture.model.BaseEntity;
 
+import javax.ws.rs.FormParam;
+import javax.xml.bind.annotation.XmlElement;
 import java.io.Serializable;
 
 /**
@@ -10,6 +12,8 @@ import java.io.Serializable;
  */
 public abstract class BaseDto<ENTITY extends BaseEntity> implements Serializable {
     private static final long serialVersionUID = 1L;
+    @FormParam("id")
+    @XmlElement(name = "id")
     public Long id;
 
     /**

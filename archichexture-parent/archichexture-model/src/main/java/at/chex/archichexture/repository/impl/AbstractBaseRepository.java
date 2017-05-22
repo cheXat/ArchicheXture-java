@@ -31,16 +31,34 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
     private static final Logger log = LoggerFactory.getLogger(AbstractBaseRepository.class);
 
     /**
+     * Create a new {@link JPASubQuery}
+     *
+     * @return
+     */
+    protected JPASubQuery createSubQuery() {
+        return new JPASubQuery();
+    }
+
+    /**
      * Implement this method and return your Entitymanager.
      * You can probably use code like:
      *
      * @return the EntityManager
+     *
      * @PersistenceContext private javax.persistence.EntityManager entityManager;
-     * @Override protected javax.persistence.EntityManager getEntityManager() {
-     * return this.entityManager;
-     * }
+     * @Override protected javax.persistence.EntityManager getEntityManager() { return this.entityManager; }
      */
     protected abstract EntityManager getEntityManager();
+
+    /**
+     * Get all entities of the given type {@link ENTITY}. Use this for small tables like configurations or for dropdowns
+     * or thelike. This is an unfiltered query, so be careful when using it.
+     *
+     * @return all existing entities
+     */
+    public List<ENTITY> findAll() {
+        return createQuery().from(getEntityPath()).list(getEntityPath());
+    }
 
     /**
      * This is the QueryDSL-generated Q-class. Just generate it from your JPA Model and return it here.
@@ -91,6 +109,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
      * and add your values here.
      *
      * @param arguments
+     *
      * @return
      */
     protected Collection<Predicate> getPredicateForQueryArgumentsMap(
@@ -102,6 +121,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
      * Override this to sort in a non-default way
      *
      * @param arguments
+     *
      * @return
      */
     protected List<OrderSpecifier<?>> getSortParameter(Map<String, List<String>> arguments) {
@@ -123,6 +143,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
      * @param arguments
      * @param limit
      * @param offset
+     *
      * @return
      */
     @Override
@@ -160,15 +181,22 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
      * Override this to add additional stuff to your query like sort or whatever
      *
      * @param query
+     *
      * @return
      */
     protected JPAQuery addAdditionalQueryAttributes(JPAQuery query) {
         return query;
     }
 
+    protected abstract Predicate getIdPredicate(Long id);
+
     @Override
     public ENTITY findEntityById(Long id) {
-        return getEntityManager().find(getEntityClass(), id);
+        ENTITY entity = getEntityManager().find(getEntityClass(), id);
+        if (null == entity) {
+            return createQuery().from(getEntityPath()).where(getIdPredicate(id)).singleResult(getEntityPath());
+        }
+        return entity;
     }
 
     @Override
@@ -176,6 +204,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
         List<ENTITY> returnList = new ArrayList<ENTITY>();
         for (Long id : idList) {
             ENTITY entity = findEntityById(id);
+            // TODO optimize with list query for those not in the EntityManager
             if (null != entity) {
                 returnList.add(entity);
             } else {
@@ -217,22 +246,5 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
         return new JPAQuery(getEntityManager());
     }
 
-    /**
-     * Create a new {@link JPASubQuery}
-     *
-     * @return
-     */
-    protected JPASubQuery createSubQuery() {
-        return new JPASubQuery();
-    }
 
-    /**
-     * Get all entities of the given type {@link ENTITY}. Use this for small tables like configurations or for dropdowns or thelike.
-     * This is an unfiltered query, so be careful when using it.
-     *
-     * @return all existing entities
-     */
-    public List<ENTITY> findAll() {
-        return createQuery().from(getEntityPath()).list(getEntityPath());
-    }
 }

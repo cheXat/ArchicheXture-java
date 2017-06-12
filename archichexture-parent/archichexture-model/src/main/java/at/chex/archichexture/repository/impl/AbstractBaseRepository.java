@@ -10,6 +10,7 @@ import com.mysema.query.types.path.EntityPathBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.PostConstruct;
 import javax.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -40,6 +41,32 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
     }
 
     /**
+     * Get all entities of the given type {@link ENTITY}. Use this for small tables like configurations or for dropdowns
+     * or thelike. This is an unfiltered query, so be careful when using it.
+     *
+     * @return all existing entities
+     */
+    public List<ENTITY> findAll() {
+        return createQuery().from(getEntityPath()).list(getEntityPath());
+    }
+
+    /**
+     * Create a new {@link JPAQuery} using the given {@link EntityManager}
+     *
+     * @return
+     */
+    protected JPAQuery createQuery() {
+        return new JPAQuery(getEntityManager());
+    }
+
+    /**
+     * This is the QueryDSL-generated Q-class. Just generate it from your JPA Model and return it here.
+     *
+     * @return the QueryClass
+     */
+    protected abstract EntityPathBase<ENTITY> getEntityPath();
+
+    /**
      * Implement this method and return your Entitymanager.
      * You can probably use code like:
      *
@@ -51,23 +78,6 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
     protected abstract EntityManager getEntityManager();
 
     /**
-     * Get all entities of the given type {@link ENTITY}. Use this for small tables like configurations or for dropdowns
-     * or thelike. This is an unfiltered query, so be careful when using it.
-     *
-     * @return all existing entities
-     */
-    public List<ENTITY> findAll() {
-        return createQuery().from(getEntityPath()).list(getEntityPath());
-    }
-
-    /**
-     * This is the QueryDSL-generated Q-class. Just generate it from your JPA Model and return it here.
-     *
-     * @return the QueryClass
-     */
-    protected abstract EntityPathBase<ENTITY> getEntityPath();
-
-    /**
      * We need the class of the {@link ENTITY} here.
      * <p>
      * ...
@@ -77,6 +87,22 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
      * @return
      */
     protected abstract Class<ENTITY> getEntityClass();
+
+    /**
+     * Execute checks, if the Repo is initialized correctly
+     */
+    @PostConstruct
+    public void init() {
+        if (null == this.getEntityManager()) {
+            log.error("EntityManager was not initialized correctly at {}!", this.getClass().getCanonicalName());
+        }
+        if (null == this.getEntityClass()) {
+            log.error("EntityClass was not initialized correctly at {}!", this.getClass().getCanonicalName());
+        }
+        if (null == this.getEntityPath()) {
+            log.error("EntityPath was not initialized correctly at {}!", this.getClass().getCanonicalName());
+        }
+    }
 
     /**
      * Create new instance of {@link ENTITY}
@@ -136,6 +162,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
     protected boolean canBeLimited() {
         return true;
     }
+
 
     /**
      * This is your main select method. Put all your arguments, limit and offset parameters
@@ -235,15 +262,6 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
         ENTITY mergedEntity = entityManager.merge(entity);
         // }
         return mergedEntity;
-    }
-
-    /**
-     * Create a new {@link JPAQuery} using the given {@link EntityManager}
-     *
-     * @return
-     */
-    protected JPAQuery createQuery() {
-        return new JPAQuery(getEntityManager());
     }
 
 

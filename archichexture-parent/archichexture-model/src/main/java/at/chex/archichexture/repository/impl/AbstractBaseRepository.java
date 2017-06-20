@@ -7,15 +7,14 @@ import com.mysema.query.jpa.impl.JPAQuery;
 import com.mysema.query.types.OrderSpecifier;
 import com.mysema.query.types.Predicate;
 import com.mysema.query.types.path.EntityPathBase;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.PostConstruct;
-import javax.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.PostConstruct;
+import javax.persistence.EntityManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This is the base implementation of {@link BaseRepository} and supports most features out of the box.
@@ -162,7 +161,6 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
     protected boolean canBeLimited() {
         return true;
     }
-
 
     /**
      * This is your main select method. Put all your arguments, limit and offset parameters

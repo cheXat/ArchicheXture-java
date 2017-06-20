@@ -1,7 +1,6 @@
 package at.chex.archichexture.model;
 
 import com.google.common.base.MoreObjects;
-
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 
@@ -13,25 +12,27 @@ import javax.persistence.MappedSuperclass;
  * @since 16/04/2017
  */
 @MappedSuperclass
-public class TitledBaseEntity extends BaseEntity {
-    /**
-     * The title of this Entity
-     */
-    @Column(name = "title")
-    private String title;
+public abstract class TitledBaseEntity extends BaseEntity {
 
-    public String getTitle() {
-        return title;
-    }
+  public static final String FIELD_NAME_TITLE = "title";
+  /**
+   * The title of this Entity
+   */
+  @Column(name = FIELD_NAME_TITLE)
+  private String title;
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
+  public String getTitle() {
+    return title;
+  }
 
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("title", title)
-                .toString();
-    }
+  public void setTitle(String title) {
+    this.title = title;
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("title", title)
+        .toString();
+  }
 }

@@ -160,7 +160,7 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
     }
 
     ENTITY entity = loadEntityById(id);
-    return Response.ok(transformToDto(entity)).build();
+    return Response.ok(null == entity ? null : transformToDto(entity)).build();
   }
 
   /**
@@ -216,7 +216,7 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
   protected List<DTO> transformToDto(List<ENTITY> entityList) {
     List<DTO> returnList = new ArrayList<DTO>();
     for (ENTITY e : entityList) {
-      DTO entityBaseDto = transformToDto(e);
+      DTO entityBaseDto = null == e ? null : transformToDto(e);
       if (null != entityBaseDto) {
         returnList.add(entityBaseDto);
       }

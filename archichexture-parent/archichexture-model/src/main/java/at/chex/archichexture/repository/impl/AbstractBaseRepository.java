@@ -201,9 +201,10 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
     }
 
     if (null != queryAttributes && queryAttributes.size() > 0) {
-      for (Predicate predicate : getPredicateForQueryArgumentsMap(queryAttributes)) {
+      query.where(getPredicateForQueryArgumentsMap(queryAttributes).toArray(new Predicate[0]));
+      /*for (Predicate predicate : getPredicateForQueryArgumentsMap(queryAttributes)) {
         query.where(predicate);
-      }
+      }*/
       List<OrderSpecifier<?>> sortParameter = getSortParameter(queryAttributes);
       if (sortParameter.size() > 0) {
         log.debug("ordering by {} parameters", sortParameter.size());
@@ -238,9 +239,18 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
 
   @Override
   public ENTITY findEntityById(Long id) {
-    ENTITY entity = getEntityManager().find(getEntityClass(), id);
+    ENTITY entity = null;
+    // we can use the cached entitymanager entity only, when there are no additional arguments
+    if (getPermanentQueryAttributes().size() < 1) {
+      entity = getEntityManager().find(getEntityClass(), id);
+    }
     if (null == entity) {
-      return createQuery().from(getEntityPath()).where(getIdPredicate(id))
+      JPAQuery query = createQuery().from(getEntityPath()).where(getIdPredicate(id));
+      if (getPermanentQueryAttributes().size() > 0) {
+        query.where(getPredicateForQueryArgumentsMap(getPermanentQueryAttributes())
+            .toArray(new Predicate[0]));
+      }
+      return query
           .singleResult(getEntityPath());
     }
     return entity;

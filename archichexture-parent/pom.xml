@@ -1,132 +1,132 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xmlns="http://maven.apache.org/POM/4.0.0"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
 
-    <groupId>at.chex.archichexture</groupId>
-    <artifactId>archichexture-parent</artifactId>
-    <version>1.1-SNAPSHOT</version>
-    <modules>
-        <module>archichexture-javaee</module>
-        <module>archichexture-core</module>
-        <module>archichexture-model</module>
-        <module>archichexture-example</module>
-        <module>archichexture-soa</module>
-    </modules>
-    <packaging>pom</packaging>
+  <groupId>at.chex.archichexture</groupId>
+  <artifactId>archichexture-parent</artifactId>
+  <version>1.1-SNAPSHOT</version>
+  <modules>
+    <module>archichexture-javaee</module>
+    <module>archichexture-core</module>
+    <module>archichexture-model</module>
+    <module>archichexture-example</module>
+    <module>archichexture-soa</module>
+  </modules>
+  <packaging>pom</packaging>
 
-    <properties>
-        <!-- JAVA Version definition -->
-        <version.java>1.7</version.java>
+  <properties>
+    <!-- JAVA Version definition -->
+    <version.java>1.7</version.java>
 
-        <!-- Java-EE Libraries version definition -->
-        <version.inject>1</version.inject>
-        <version.persistence-api>1.0.2</version.persistence-api>
-        <version.rs-api>2.1-m05</version.rs-api>
+    <!-- Java-EE Libraries version definition -->
+    <version.inject>1</version.inject>
+    <version.persistence-api>1.0.2</version.persistence-api>
+    <version.rs-api>2.1-m05</version.rs-api>
 
-        <!-- Logging -->
-        <version.slf4j>1.7.25</version.slf4j>
+    <!-- Logging -->
+    <version.slf4j>1.7.25</version.slf4j>
 
-        <!-- 3rd Party Database support library -->
-        <version.persistence-api>2.1.1</version.persistence-api>
-        <version.querydsl>3.7.4</version.querydsl>
-        <version.owner>1.0.9</version.owner>
-        <version.gson>2.8.0</version.gson>
+    <!-- 3rd Party Database support library -->
+    <version.persistence-api>2.1.1</version.persistence-api>
+    <version.querydsl>3.7.4</version.querydsl>
+    <version.owner>1.0.9</version.owner>
+    <version.gson>2.8.0</version.gson>
 
-        <!-- TEST Stuff -->
-        <version.junit>4.12</version.junit>
-    </properties>
+    <!-- TEST Stuff -->
+    <version.junit>4.12</version.junit>
+  </properties>
 
-    <dependencyManagement>
-        <dependencies>
-            <!-- internal libraries -->
-            <dependency>
-                <groupId>at.chex.archichexture</groupId>
-                <artifactId>archichexture-model</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>at.chex.archichexture</groupId>
-                <artifactId>archichexture-core</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>at.chex.archichexture</groupId>
-                <artifactId>archichexture-javaee</artifactId>
-                <version>${project.version}</version>
-            </dependency>
+  <dependencyManagement>
+    <dependencies>
+      <!-- internal libraries -->
+      <dependency>
+        <groupId>at.chex.archichexture</groupId>
+        <artifactId>archichexture-model</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>at.chex.archichexture</groupId>
+        <artifactId>archichexture-core</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>at.chex.archichexture</groupId>
+        <artifactId>archichexture-javaee</artifactId>
+        <version>${project.version}</version>
+      </dependency>
 
-            <!-- 3rd Party/JEE libraries -->
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-api</artifactId>
-                <version>${version.slf4j}</version>
-            </dependency>
-            <dependency>
-                <groupId>javax.ws.rs</groupId>
-                <artifactId>javax.ws.rs-api</artifactId>
-                <version>${version.rs-api}</version>
-            </dependency>
-            <dependency>
-                <groupId>javax.inject</groupId>
-                <artifactId>javax.inject</artifactId>
-                <version>${version.inject}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.aeonbits.owner</groupId>
-                <artifactId>owner</artifactId>
-                <version>${version.owner}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.code.gson</groupId>
-                <artifactId>gson</artifactId>
-                <version>${version.gson}</version>
-            </dependency>
-            <!-- JPA/Query Frameworks -->
-            <dependency>
-                <!-- This is needed in the queryDsl class generator -->
-                <groupId>org.eclipse.persistence</groupId>
-                <artifactId>javax.persistence</artifactId>
-                <version>${version.persistence-api}</version>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>com.mysema.querydsl</groupId>
-                <artifactId>querydsl-jpa</artifactId>
-                <version>${version.querydsl}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.mysema.querydsl</groupId>
-                <artifactId>querydsl-core</artifactId>
-                <version>${version.querydsl}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.mysema.querydsl</groupId>
-                <artifactId>querydsl-apt</artifactId>
-                <version>${version.querydsl}</version>
-            </dependency>
-            <!-- TEST Stuff -->
-            <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>${version.junit}</version>
-                <scope>test</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.1</version>
-                <configuration>
-                    <source>${version.java}</source>
-                    <target>${version.java}</target>
-                    <compilerArgument>-proc:none</compilerArgument>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+      <!-- 3rd Party/JEE libraries -->
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${version.slf4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>javax.ws.rs</groupId>
+        <artifactId>javax.ws.rs-api</artifactId>
+        <version>${version.rs-api}</version>
+      </dependency>
+      <dependency>
+        <groupId>javax.inject</groupId>
+        <artifactId>javax.inject</artifactId>
+        <version>${version.inject}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.aeonbits.owner</groupId>
+        <artifactId>owner</artifactId>
+        <version>${version.owner}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.code.gson</groupId>
+        <artifactId>gson</artifactId>
+        <version>${version.gson}</version>
+      </dependency>
+      <!-- JPA/Query Frameworks -->
+      <dependency>
+        <!-- This is needed in the queryDsl class generator -->
+        <groupId>org.eclipse.persistence</groupId>
+        <artifactId>javax.persistence</artifactId>
+        <version>${version.persistence-api}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.mysema.querydsl</groupId>
+        <artifactId>querydsl-jpa</artifactId>
+        <version>${version.querydsl}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.mysema.querydsl</groupId>
+        <artifactId>querydsl-core</artifactId>
+        <version>${version.querydsl}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.mysema.querydsl</groupId>
+        <artifactId>querydsl-apt</artifactId>
+        <version>${version.querydsl}</version>
+      </dependency>
+      <!-- TEST Stuff -->
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>${version.junit}</version>
+        <scope>test</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.1</version>
+        <configuration>
+          <source>${version.java}</source>
+          <target>${version.java}</target>
+          <compilerArgument>-proc:none</compilerArgument>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

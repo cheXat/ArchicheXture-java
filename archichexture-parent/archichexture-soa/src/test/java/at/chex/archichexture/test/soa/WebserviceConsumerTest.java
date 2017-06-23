@@ -13,13 +13,14 @@ import org.slf4j.LoggerFactory;
  */
 
 public class WebserviceConsumerTest {
-    private Logger log = LoggerFactory.getLogger(WebserviceConsumerTest.class);
 
-    @Test
-    public void consumeMyIpJsonTest() {
-        IpDto ip = WebserviceConsumer.callJsonService("http://ip.jsontest.com/", IpDto.class);
-        Assert.assertNotNull(ip);
-        Assert.assertNotNull(ip.ip);
-        log.trace("Returned ip:{}", ip.ip);
-    }
+  private Logger log = LoggerFactory.getLogger(WebserviceConsumerTest.class);
+
+  @Test
+  public void consumeMyIpJsonTest() {
+    IpDto ip = WebserviceConsumer.callJsonService("http://ip.jsontest.com/", IpDto.class);
+    Assert.assertNotNull(ip);
+    Assert.assertNotNull(ip.ip);
+    log.trace("Returned ip:{}", ip.ip);
+  }
 }

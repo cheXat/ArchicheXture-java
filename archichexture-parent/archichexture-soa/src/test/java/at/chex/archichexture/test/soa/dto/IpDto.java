@@ -7,5 +7,6 @@ import java.io.Serializable;
  * @since 05/04/2017
  */
 public class IpDto implements Serializable {
-    public String ip;
+
+  public String ip;
 }

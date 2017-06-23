@@ -7,10 +7,11 @@ import org.aeonbits.owner.ConfigFactory;
  * @since 30/03/2017
  */
 public class RestConfigFactory {
-    private RestConfigFactory() {
-    }
 
-    public static RestConfig get() {
-        return ConfigFactory.create(RestConfig.class);
-    }
+  private RestConfigFactory() {
+  }
+
+  public static RestConfig get() {
+    return ConfigFactory.create(RestConfig.class);
+  }
 }

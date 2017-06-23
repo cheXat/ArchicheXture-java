@@ -148,6 +148,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
    */
   @Override
   public void addPermanentQueryAttribute(String key, Collection<String> values) {
+    log.debug("Adding permanent Attribute {}:{}", key, values);
     permanentQueryAttributes.put(key, new ArrayList<String>());
     permanentQueryAttributes.get(key).addAll(values);
   }

@@ -35,15 +35,32 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
     return this.restConfig;
   }
 
+  /**
+   * If this is false, try #init() before
+   */
   protected boolean isInitialized() {
     return initialized;
   }
 
+  /**
+   * Make sure to initialize any controller with this method before using it
+   */
   public void init() {
     this.restConfig = RestConfigFactory.get();
     this.initialized = true;
   }
 
+  /**
+   * Do whatever checks you like here BEFORE this {@link ENTITY} is manipulated. This will be
+   * executed before anything is changed.
+   */
+  protected boolean isCanManipulateEntity(ENTITY entity) {
+    return true;
+  }
+
+  /**
+   * Execute PUT
+   */
   protected Response internalExecutePUTRequest(DTO formParam) {
     log.debug("Create new entity for {}", formParam);
     try {
@@ -57,6 +74,9 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
     }
   }
 
+  /**
+   * Map all values, you need from the {@link DTO} to the {@link ENTITY} and save it afterwards!
+   */
   protected abstract ENTITY updateOrCreateEntityFromParameters(
       DTO formObject, ENTITY entity) throws IllegalArgumentException;
 
@@ -67,6 +87,10 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
     return getEntityRepository().create();
   }
 
+  /**
+   * We assume, there is a concrete implementation of {@link BaseRepository} for {@link ENTITY}
+   * somewhere around, that we can use.
+   */
   protected abstract BaseRepository<ENTITY> getEntityRepository();
 
   /**

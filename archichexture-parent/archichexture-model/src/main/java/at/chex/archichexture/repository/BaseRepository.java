@@ -2,6 +2,7 @@ package at.chex.archichexture.repository;
 
 import at.chex.archichexture.model.BaseEntity;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -59,6 +60,12 @@ public interface BaseRepository<ENTITY extends BaseEntity> extends
    * updated {@link ENTITY}
    */
   ENTITY save(ENTITY entity);
+
+  /**
+   * These arguments will be handed over on each query, narrowing down your search by a fixed value
+   * (e.g. logged in User)
+   */
+  void addPermanentQueryAttribute(String key, Collection<String> values);
 
   /**
    * Select for a List of {@link ENTITY}s with the given parameters, limits and offsets

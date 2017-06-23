@@ -229,11 +229,7 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
     }
 
     log.debug("Delete entity with id {} for token {}", id, token);
-    ENTITY entity = loadEntityById(id, token);
-    if (this.getEntityRepository().delete(entity)) {
-      return Response.ok().build();
-    }
-    return Response.status(Response.Status.PRECONDITION_FAILED).build();
+    return super.internalExecuteDELETERequest(id);
   }
 
   /**

@@ -9,8 +9,10 @@ import com.mysema.query.types.Predicate;
 import com.mysema.query.types.path.EntityPathBase;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import javax.annotation.PostConstruct;
 import javax.persistence.EntityManager;
 import org.slf4j.Logger;
@@ -31,6 +33,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
   private static final long serialVersionUID = 1L;
 
   private static final Logger log = LoggerFactory.getLogger(AbstractBaseRepository.class);
+  private Map<String, List<String>> permanentQueryAttributes = new HashMap<>();
 
   /**
    * Create a new {@link JPASubQuery}
@@ -140,6 +143,22 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
   }
 
   /**
+   * These arguments will be handed over on each query, narrowing down your search by a fixed value
+   * (e.g. logged in User)
+   */
+  @Override
+  public void addPermanentQueryAttribute(String key, Collection<String> values) {
+    if (!permanentQueryAttributes.containsKey(key)) {
+      permanentQueryAttributes.put(key, new ArrayList<String>());
+    }
+    permanentQueryAttributes.get(key).addAll(values);
+  }
+
+  private Map<String, List<String>> getPermanentQueryAttributes() {
+    return permanentQueryAttributes;
+  }
+
+  /**
    * Override this to sort in a non-default way
    */
   protected List<OrderSpecifier<?>> getSortParameter(Map<String, List<String>> arguments) {
@@ -154,17 +173,27 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
   }
 
   /**
-   * This is your main select method. Put all your arguments, limit and offset parameters
+   * This is your main select method. Put all your arguments, limit and offset parameters here
    */
   @Override
   public List<ENTITY> list(Map<String, List<String>> arguments, int limit,
       int offset) {
     JPAQuery query = createQuery().from(getEntityPath());
-    if (null != arguments) {
-      for (Predicate predicate : getPredicateForQueryArgumentsMap(arguments)) {
+    Map<String, List<String>> queryAttributes = new HashMap<>(
+        getPermanentQueryAttributes());
+    // Merge those 2 Maps carrying the arguments for the query
+    for (Entry<String, List<String>> entry : arguments.entrySet()) {
+      if (!queryAttributes.containsKey(entry.getKey())) {
+        queryAttributes.put(entry.getKey(), new ArrayList<String>());
+      }
+      queryAttributes.get(entry.getKey()).addAll(entry.getValue());
+    }
+
+    if (null != queryAttributes && queryAttributes.size() > 0) {
+      for (Predicate predicate : getPredicateForQueryArgumentsMap(queryAttributes)) {
         query.where(predicate);
       }
-      List<OrderSpecifier<?>> sortParameter = getSortParameter(arguments);
+      List<OrderSpecifier<?>> sortParameter = getSortParameter(queryAttributes);
       if (sortParameter.size() > 0) {
         log.debug("ordering by {} parameters", sortParameter.size());
         for (OrderSpecifier<?> predicate : sortParameter) {
@@ -177,7 +206,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
     }
     List<ENTITY> returnList = new ArrayList<ENTITY>(addAdditionalQueryAttributes(
         query).list(getEntityPath()));
-    if (null != arguments && null != arguments.get(ARGUMENT_ENTITY_ID)) {
+    if (null != queryAttributes && null != queryAttributes.get(ARGUMENT_ENTITY_ID)) {
       List<ENTITY> idList = new ArrayList<ENTITY>();
       for (String arg : arguments.get(ARGUMENT_ENTITY_ID)) {
         idList.add(findEntityById(Long.valueOf(arg)));

@@ -33,10 +33,16 @@ public abstract class BaseDto<ENTITY extends BaseEntity> implements Serializable
   public BaseDto() {
   }
 
+  /**
+   * The id of the {@link ENTITY}
+   */
   public Long getId() {
     return id;
   }
 
+  /**
+   * Set the id of this {@link ENTITY}
+   */
   public void setId(Long id) {
     this.id = id;
   }

@@ -21,10 +21,16 @@ public abstract class TitledBaseEntity extends BaseEntity {
   @Column(name = FIELD_NAME_TITLE)
   private String title;
 
+  /**
+   * The title of this Entity
+   */
   public String getTitle() {
     return title;
   }
 
+  /**
+   * Set the title of this Entity
+   */
   public void setTitle(String title) {
     this.title = title;
   }

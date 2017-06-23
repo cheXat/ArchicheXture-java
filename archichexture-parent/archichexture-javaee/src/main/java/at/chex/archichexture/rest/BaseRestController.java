@@ -20,8 +20,9 @@ import org.slf4j.LoggerFactory;
  * implementations ( {@link TokenBaseRestController}, {@link } ) provided, that already inherit from
  * here.
  *
- * @author Jakob Galbavy <code>jg@chex.at</code>
- * @since 24/03/2017
+ * @author cheX GmbH Austria {@literal chex@chex.at}
+ * @author Jakob Galbavy {@literal jg@chex.at}
+ * @since 27/03/2017
  */
 public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends BaseDto<ENTITY>>
     implements Serializable {

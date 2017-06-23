@@ -3,8 +3,9 @@ package at.chex.archichexture.rest.token;
 /**
  * This provides an interface, that is used to check the validity of an incoming token.
  *
- * @author Jakob Galbavy <code>jg@chex.at</code>
- * @since 30/03/2017
+ * @author cheX GmbH Austria {@literal chex@chex.at}
+ * @author Jakob Galbavy {@literal jg@chex.at}
+ * @since 27/03/2017
  */
 public interface TokenCheck {
 

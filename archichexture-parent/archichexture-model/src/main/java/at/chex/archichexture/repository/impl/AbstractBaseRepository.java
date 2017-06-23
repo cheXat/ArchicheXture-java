@@ -139,6 +139,18 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
    */
   protected Collection<Predicate> getPredicateForQueryArgumentsMap(
       Map<String, List<String>> arguments) {
+    if (log.isDebugEnabled()) {
+      String joined = "";
+      boolean first = true;
+      for (String s : arguments.keySet()) {
+        if (!first) {
+          joined += ",";
+        }
+        joined += s;
+        first = false;
+      }
+      log.debug("Requested Predicates for Arguments: {}", joined);
+    }
     return new ArrayList<Predicate>();
   }
 

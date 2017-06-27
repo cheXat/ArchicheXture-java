@@ -5,7 +5,7 @@
   <parent>
     <artifactId>archichexture-parent</artifactId>
     <groupId>at.chex.archichexture</groupId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.2-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -38,6 +38,27 @@
     <dependency>
       <groupId>com.mysema.querydsl</groupId>
       <artifactId>querydsl-apt</artifactId>
+    </dependency>
+    <!-- TEST -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-entitymanager</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jglue.cdi-unit</groupId>
+      <artifactId>cdi-unit</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
   <build>

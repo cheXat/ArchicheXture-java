@@ -285,13 +285,14 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
   public ENTITY save(ENTITY entity) {
     log.trace("Save called for entity {}", entity);
     EntityManager entityManager = getEntityManager();
-    // if (!entityManager.contains(entity)) {
-    // entityManager.persist(entity);
-    // FIXME reload entity
-    // } else {
-    ENTITY mergedEntity = entityManager.merge(entity);
-    // }
-    return mergedEntity;
+    if (!entityManager.contains(entity)) {
+      entityManager.persist(entity);
+      entityManager.flush();
+      return entityManager.find(getEntityClass(), entity.getId());
+      //FIXME reload entity
+    } else {
+      return entityManager.merge(entity);
+    }
   }
 
 

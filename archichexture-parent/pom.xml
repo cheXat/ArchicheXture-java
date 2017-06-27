@@ -6,7 +6,7 @@
 
   <groupId>at.chex.archichexture</groupId>
   <artifactId>archichexture-parent</artifactId>
-  <version>1.1-SNAPSHOT</version>
+  <version>1.2-SNAPSHOT</version>
   <modules>
     <module>archichexture-javaee</module>
     <module>archichexture-core</module>
@@ -35,7 +35,10 @@
     <version.gson>2.8.0</version.gson>
 
     <!-- TEST Stuff -->
+    <version.cdi-unit>3.1.4</version.cdi-unit>
     <version.junit>4.12</version.junit>
+    <version.h2>1.4.192</version.h2>
+    <hibernate.version>5.2.4.Final</hibernate.version>
   </properties>
 
   <dependencyManagement>
@@ -113,6 +116,24 @@
         <version>${version.junit}</version>
         <scope>test</scope>
       </dependency>
+      <dependency>
+        <groupId>com.h2database</groupId>
+        <artifactId>h2</artifactId>
+        <version>${version.h2}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.hibernate</groupId>
+        <artifactId>hibernate-entitymanager</artifactId>
+        <version>${hibernate.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.jglue.cdi-unit</groupId>
+        <artifactId>cdi-unit</artifactId>
+        <version>${version.cdi-unit}</version>
+        <scope>test</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
   <build>
@@ -138,6 +159,11 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.19</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

@@ -11,7 +11,7 @@ import java.util.Map;
  * {@link Stateless}, {@link Singleton}, {@link Named}, ... Everything, that is injected by your
  * engine at the injection points of {@link Inject} to your controllers. <p> Hint: inherit from
  * {@link at.chex.archichexture.repository.impl.AbstractBaseRepository} to get your kickstart
- * without to much coding.
+ * without too much coding.
  *
  * @author cheX GmbH Austria {@literal chex@chex.at}
  * @author Jakob Galbavy {@literal jg@chex.at}
@@ -25,6 +25,10 @@ public interface BaseRepository<ENTITY extends BaseEntity> extends
    * Primary Key identifier
    */
   String ARGUMENT_ENTITY_ID = "id";
+  /**
+   * Ignore the default filtering for active entities (not supported by all)
+   */
+  String ARGUMENT_IGNORE_ACTIVE = "ignore_active";
   /**
    * Sort column identifier
    */

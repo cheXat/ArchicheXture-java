@@ -2,12 +2,15 @@ package at.chex.archichexture.repository.impl;
 
 import at.chex.archichexture.model.BaseEntity;
 import at.chex.archichexture.repository.BaseRepository;
+import com.google.common.base.Strings;
+import com.mysema.query.BooleanBuilder;
 import com.mysema.query.jpa.JPASubQuery;
 import com.mysema.query.jpa.impl.JPAQuery;
 import com.mysema.query.types.OrderSpecifier;
 import com.mysema.query.types.Predicate;
 import com.mysema.query.types.path.EntityPathBase;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -30,9 +33,16 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implements
     BaseRepository<ENTITY> {
 
-  private static final long serialVersionUID = 1L;
-
+  /**
+   * Filter/Sort attributes
+   */
+  /**
+   * Logger
+   */
   private static final Logger log = LoggerFactory.getLogger(AbstractBaseRepository.class);
+  /**
+   * Additional stuff
+   */
   private Map<String, List<String>> permanentQueryAttributes = new HashMap<>();
 
   /**
@@ -50,7 +60,8 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
    * @return all existing entities
    */
   public List<ENTITY> findAll() {
-    return createQuery().from(getEntityPath()).list(getEntityPath());
+    return createQuery().from(getEntityPath()).where(getActivePredicate(true))
+        .list(getEntityPath());
   }
 
   /**
@@ -87,6 +98,25 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
    * ...
    */
   protected abstract Class<ENTITY> getEntityClass();
+
+  /**
+   * Override this to make your {@link ENTITY}-Query aware of an active or inactive state (that is
+   * the argument). Make sure to also override {@link #isActiveEntity(BaseEntity)} when overriding
+   * this.
+   */
+  protected Predicate getActivePredicate(boolean activeState) {
+    return new BooleanBuilder();
+  }
+
+  /**
+   * Override this to check whether an {@link ENTITY} is active or not. This is used, when a {@link
+   * ENTITY} is found in the {@link EntityManager} and no query is executed where we could append
+   * {@link #getActivePredicate(boolean)}. Make sure to also override {@link
+   * #getActivePredicate(boolean)} when overriding this.
+   */
+  protected boolean isActiveEntity(ENTITY entity) {
+    return true;
+  }
 
   /**
    * Execute checks, if the Repo is initialized correctly
@@ -139,6 +169,10 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
    */
   protected Collection<Predicate> getPredicateForQueryArgumentsMap(
       Map<String, List<String>> arguments) {
+    ArrayList<Predicate> list = new ArrayList<>();
+    /**
+     * Debug logging
+     */
     if (log.isDebugEnabled()) {
       String joined = "";
       boolean first = true;
@@ -151,7 +185,30 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
       }
       log.debug("Requested Predicates for Arguments: {}", joined);
     }
-    return new ArrayList<Predicate>();
+    /**
+     * "Active" Attribute in- or exclusion
+     */
+    if (arguments.containsKey(ARGUMENT_IGNORE_ACTIVE)) {
+      List<String> activeArgumentList = arguments
+          .getOrDefault(ARGUMENT_IGNORE_ACTIVE, Arrays.asList("false"));
+      if (null == activeArgumentList || activeArgumentList.size() < 1) {
+        /**
+         * Defaulting, if none set
+         */
+        list.add(getActivePredicate(true));
+      } else {
+        String s = activeArgumentList.get(0);
+
+        if (!Strings.isNullOrEmpty(s)) {
+          list.add(getActivePredicate(Boolean.valueOf(s)));
+        } else {
+          list.add(getActivePredicate(true));
+        }
+      }
+    } else {
+      list.add(getActivePredicate(true));
+    }
+    return list;
   }
 
   /**
@@ -165,6 +222,9 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
     permanentQueryAttributes.get(key).addAll(values);
   }
 
+  /**
+   * Permanently set query attributes
+   */
   private Map<String, List<String>> getPermanentQueryAttributes() {
     return permanentQueryAttributes;
   }
@@ -189,10 +249,12 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
   @Override
   public List<ENTITY> list(Map<String, List<String>> arguments, int limit,
       int offset) {
-    JPAQuery query = createQuery().from(getEntityPath());
+    JPAQuery query = createQuery().from(getEntityPath()).where(getActivePredicate(true));
     Map<String, List<String>> queryAttributes = new HashMap<>(
         getPermanentQueryAttributes());
-    // Merge those 2 Maps carrying the arguments for the query
+    /**
+     * Merge those 2 Maps carrying the arguments for the query
+     */
     for (Entry<String, List<String>> entry : arguments.entrySet()) {
       if (!queryAttributes.containsKey(entry.getKey())) {
         queryAttributes.put(entry.getKey(), new ArrayList<String>());
@@ -201,21 +263,28 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
     }
 
     if (null != queryAttributes && queryAttributes.size() > 0) {
+      /**
+       * Add all query parameters
+       */
       query.where(getPredicateForQueryArgumentsMap(queryAttributes).toArray(new Predicate[0]));
-      /*for (Predicate predicate : getPredicateForQueryArgumentsMap(queryAttributes)) {
-        query.where(predicate);
-      }*/
+      /**
+       * Prepare and add all sort parameters
+       */
       List<OrderSpecifier<?>> sortParameter = getSortParameter(queryAttributes);
-      if (sortParameter.size() > 0) {
+      if (null != sortParameter && sortParameter.size() > 0) {
         log.debug("ordering by {} parameters", sortParameter.size());
-        for (OrderSpecifier<?> predicate : sortParameter) {
-          query.orderBy(predicate);
-        }
+        query.orderBy(sortParameter.toArray(new OrderSpecifier[0]));
       }
     }
+    /**
+     * Limit and offset go together
+     */
     if (canBeLimited() && limit > 0) {
       query.limit(limit).offset(offset);
     }
+    /**
+     * Execute the query
+     */
     List<ENTITY> returnList = new ArrayList<ENTITY>(addAdditionalQueryAttributes(
         query).list(getEntityPath()));
     if (null != queryAttributes && null != queryAttributes.get(ARGUMENT_ENTITY_ID)) {
@@ -243,9 +312,11 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
     // we can use the cached entitymanager entity only, when there are no additional arguments
     if (getPermanentQueryAttributes().size() < 1) {
       entity = getEntityManager().find(getEntityClass(), id);
+      return isActiveEntity(entity) ? entity : null;
     }
     if (null == entity) {
-      JPAQuery query = createQuery().from(getEntityPath()).where(getIdPredicate(id));
+      JPAQuery query = createQuery().from(getEntityPath()).where(getIdPredicate(id))
+          .where(getActivePredicate(true));
       if (getPermanentQueryAttributes().size() > 0) {
         query.where(getPredicateForQueryArgumentsMap(getPermanentQueryAttributes())
             .toArray(new Predicate[0]));
@@ -253,7 +324,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
       return query
           .singleResult(getEntityPath());
     }
-    return entity;
+    return null;
   }
 
   @Override
@@ -286,14 +357,20 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
     log.trace("Save called for entity {}", entity);
     EntityManager entityManager = getEntityManager();
     if (!entityManager.contains(entity)) {
+      /**
+       * Try to persist first
+       */
       entityManager.persist(entity);
       entityManager.flush();
+      /**
+       * Reload entity
+       */
       return entityManager.find(getEntityClass(), entity.getId());
-      //FIXME reload entity
     } else {
+      /**
+       * Just merge
+       */
       return entityManager.merge(entity);
     }
   }
-
-
 }

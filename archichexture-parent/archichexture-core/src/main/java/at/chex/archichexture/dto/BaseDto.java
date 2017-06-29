@@ -7,15 +7,20 @@ import javax.ws.rs.FormParam;
 import javax.xml.bind.annotation.XmlElement;
 
 /**
- * @author Jakob Galbavy <code>jg@chex.at</code>
+ * This is the base for all dtos that are used to transport {@link BaseEntity}
+ *
+ * @author cheX GmbH Austria {@literal chex@chex.at}
+ * @author Jakob Galbavy {@literal jg@chex.at}
+ * @version 1.0
  * @since 24/03/2017
  */
 public abstract class BaseDto<ENTITY extends BaseEntity> implements Serializable {
 
   private static final long serialVersionUID = 1L;
+
   @DefaultValue("-1")
-  @FormParam("id")
-  @XmlElement(name = "id")
+  @FormParam(BaseEntity.FIELD_NAME_ID)
+  @XmlElement(name = BaseEntity.FIELD_NAME_ID)
   public Long id;
 
   /**

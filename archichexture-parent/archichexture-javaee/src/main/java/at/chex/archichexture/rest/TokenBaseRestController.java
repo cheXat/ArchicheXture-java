@@ -9,7 +9,6 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -122,7 +121,7 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
     return super.internalGETRequest(id);
   }
 
-  @PUT
+  @POST
   @Path("/")
   @Consumes("application/x-www-form-urlencoded")
   @Produces(MediaType.APPLICATION_JSON)
@@ -136,9 +135,12 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
       return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
     }
 
-    if (this.readonlyController) {
+    if (this.isReadonlyController()) {
+      log.warn("Tried to PUT on a readonly controller!");
       return Response.status(Response.Status.BAD_REQUEST).build();
     }
+    log.trace("POST:/ (create) with Parameters. dto:{}, reset_token:{}, token:{}", formParam,
+        resetTokenTimes, token);
 
     int tokenStatusResponseCode = getTokenResponseCode(token, resetTokenTimes);
     if (tokenStatusResponseCode > 0) {
@@ -162,12 +164,13 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
       log.error("Uninitialized Rest Controller! Call init() before doing anything else!");
       return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
     }
-    log.trace("POST:/id with Parameters. id:{}, dto:{}, reset_token:{}, token:{}", id, formParam,
-        resetTokenTimes, token);
 
-    if (this.readonlyController) {
+    if (this.isReadonlyController()) {
+      log.warn("Tried to POST on a readonly controller!");
       return Response.status(Response.Status.BAD_REQUEST).build();
     }
+    log.trace("POST:/id with Parameters. id:{}, dto:{}, reset_token:{}, token:{}", id, formParam,
+        resetTokenTimes, token);
 
     int tokenStatusResponseCode = getTokenResponseCode(token, resetTokenTimes);
     if (tokenStatusResponseCode > 0) {
@@ -185,6 +188,10 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
     return super.internalExecutePOSTRequest(id, formParam);
   }
 
+  protected boolean isReadonlyController() {
+    return this.readonlyController;
+  }
+
   @DELETE
   @Path("/{id}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -198,7 +205,8 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
       return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
     }
 
-    if (this.readonlyController) {
+    if (this.isReadonlyController()) {
+      log.warn("Tried to DELETE on a readonly controller!");
       return Response.status(Response.Status.BAD_REQUEST).build();
     }
 
@@ -235,7 +243,10 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
   /**
    * Override this to interfere in the loading process (e.g. load different entities according to id
    * characteristics)
+   *
+   * @deprecated has never been used. Remove!
    */
+  @Deprecated
   protected ENTITY loadEntityById(Long id, String token) {
     int tokenStatusResponseCode = getTokenResponseCode(token, false);
     if (tokenStatusResponseCode > 0) {

@@ -21,7 +21,7 @@ public abstract class BaseDto<ENTITY extends BaseEntity> implements Serializable
   @DefaultValue("-1")
   @FormParam(BaseEntity.FIELD_NAME_ID)
   @XmlElement(name = BaseEntity.FIELD_NAME_ID)
-  public Long id;
+  protected Long id;
 
   /**
    * Outgoing constructor

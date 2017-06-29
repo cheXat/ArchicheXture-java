@@ -356,21 +356,6 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
   public ENTITY save(ENTITY entity) {
     log.trace("Save called for entity {}", entity);
     EntityManager entityManager = getEntityManager();
-    if (!entityManager.contains(entity)) {
-      /**
-       * Try to persist first
-       */
-      entityManager.persist(entity);
-      entityManager.flush();
-      /**
-       * Reload entity
-       */
-      return entityManager.find(getEntityClass(), entity.getId());
-    } else {
-      /**
-       * Just merge
-       */
-      return entityManager.merge(entity);
-    }
+    return entityManager.merge(entity);
   }
 }

@@ -123,7 +123,7 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
 
   @POST
   @Path("/")
-  @Consumes("application/x-www-form-urlencoded")
+  @Consumes({"application/x-www-form-urlencoded", MediaType.APPLICATION_JSON})
   @Produces(MediaType.APPLICATION_JSON)
   public Response executePUTRequest(
       @BeanParam DTO formParam,
@@ -152,7 +152,7 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
 
   @POST
   @Path("/{id}")
-  @Consumes("application/x-www-form-urlencoded")
+  @Consumes({"application/x-www-form-urlencoded", MediaType.APPLICATION_JSON})
   @Produces(MediaType.APPLICATION_JSON)
   public Response executePOSTRequest(
       @PathParam("id") Long id,

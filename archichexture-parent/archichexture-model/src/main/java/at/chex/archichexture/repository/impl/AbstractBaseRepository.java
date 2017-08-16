@@ -12,6 +12,7 @@ import com.mysema.query.types.path.EntityPathBase;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,8 +81,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
   protected abstract EntityPathBase<ENTITY> getEntityPath();
 
   /**
-   * Implement this method and return your Entitymanager.
-   * You can probably use code like:
+   * Implement this method and return your Entitymanager. You can probably use code like:
    *
    * @return the EntityManager
    * @PersistenceContext private javax.persistence.EntityManager entityManager;
@@ -91,11 +91,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
   protected abstract EntityManager getEntityManager();
 
   /**
-   * We need the class of the {@link ENTITY} here.
-   * <p>
-   * ...
-   * return MyAwesomeClass.class;
-   * ...
+   * We need the class of the {@link ENTITY} here. <p> ... return MyAwesomeClass.class; ...
    */
   protected abstract Class<ENTITY> getEntityClass();
 
@@ -143,6 +139,8 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
    * @return the newly created entity
    */
   public ENTITY create() {
+    log.debug("Create new Entity");
+
     try {
       return getEntityClass().newInstance();
     } catch (InstantiationException e) {
@@ -161,10 +159,8 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
   }
 
   /**
-   * Override this to add {@link Predicate}s to the Arguments of Queries
-   * according to the given RequestParameters {@link Map}
-   * <p>
-   * Start the implementation with super.getPredicateForQueryArgumentsMap()
+   * Override this to add {@link Predicate}s to the Arguments of Queries according to the given
+   * RequestParameters {@link Map} <p> Start the implementation with super.getPredicateForQueryArgumentsMap()
    * and add your values here.
    */
   protected Collection<Predicate> getPredicateForQueryArgumentsMap(
@@ -255,11 +251,13 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
     /**
      * Merge those 2 Maps carrying the arguments for the query
      */
-    for (Entry<String, List<String>> entry : arguments.entrySet()) {
-      if (!queryAttributes.containsKey(entry.getKey())) {
-        queryAttributes.put(entry.getKey(), new ArrayList<String>());
+    if (null != arguments) {
+      for (Entry<String, List<String>> entry : arguments.entrySet()) {
+        if (!queryAttributes.containsKey(entry.getKey())) {
+          queryAttributes.put(entry.getKey(), new ArrayList<String>());
+        }
+        queryAttributes.get(entry.getKey()).addAll(entry.getValue());
       }
-      queryAttributes.get(entry.getKey()).addAll(entry.getValue());
     }
 
     if (null != queryAttributes && queryAttributes.size() > 0) {
@@ -289,11 +287,14 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
         query).list(getEntityPath()));
     if (null != queryAttributes && null != queryAttributes.get(ARGUMENT_ENTITY_ID)) {
       List<ENTITY> idList = new ArrayList<ENTITY>();
-      for (String arg : arguments.get(ARGUMENT_ENTITY_ID)) {
-        idList.add(findEntityById(Long.valueOf(arg)));
+      if (null != arguments) {
+        for (String arg : arguments.get(ARGUMENT_ENTITY_ID)) {
+          idList.add(findEntityById(Long.valueOf(arg)));
+        }
       }
       returnList.retainAll(idList);
     }
+    log.debug("Returning List of entities {}", returnList);
     return returnList;
   }
 
@@ -308,11 +309,18 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
 
   @Override
   public ENTITY findEntityById(Long id) {
+    if (null == id) {
+      log.debug("findEntityById with NULL id");
+      return null;
+    }
+
     ENTITY entity = null;
     // we can use the cached entitymanager entity only, when there are no additional arguments
     if (getPermanentQueryAttributes().size() < 1) {
       entity = getEntityManager().find(getEntityClass(), id);
-      return isActiveEntity(entity) ? entity : null;
+      ENTITY returnEntity = isActiveEntity(entity) ? entity : null;
+      log.debug("Returning entity {}", returnEntity);
+      return returnEntity;
     }
     if (null == entity) {
       JPAQuery query = createQuery().from(getEntityPath()).where(getIdPredicate(id))
@@ -321,14 +329,21 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
         query.where(getPredicateForQueryArgumentsMap(getPermanentQueryAttributes())
             .toArray(new Predicate[0]));
       }
-      return query
+      ENTITY returnEntity = query
           .singleResult(getEntityPath());
+      log.debug("Returning entity {}", returnEntity);
+      return returnEntity;
     }
     return null;
   }
 
   @Override
   public List<ENTITY> findEntityById(List<Long> idList) {
+    if (null == idList) {
+      log.debug("findEntityById with NULL List");
+      return Collections.emptyList();
+    }
+
     List<ENTITY> returnList = new ArrayList<ENTITY>();
     for (Long id : idList) {
       ENTITY entity = findEntityById(id);
@@ -344,6 +359,11 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
 
   @Override
   public boolean delete(ENTITY entity) {
+    if (null == entity) {
+      log.debug("Delete called for NULL entity");
+      return false;
+    }
+
     if (!getEntityManager().contains(entity)) {
       log.debug("Tried to delete entity {}, but it was not contained in the entitymanager");
       return false;
@@ -354,6 +374,11 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
 
   @Override
   public ENTITY save(ENTITY entity) {
+    if (null == entity) {
+      log.debug("Save called for NULL entity");
+      return null;
+    }
+
     log.trace("Save called for entity {}", entity);
     EntityManager entityManager = getEntityManager();
     return entityManager.merge(entity);

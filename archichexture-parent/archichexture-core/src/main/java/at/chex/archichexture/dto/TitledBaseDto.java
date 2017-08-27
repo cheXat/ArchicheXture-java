@@ -1,7 +1,6 @@
 package at.chex.archichexture.dto;
 
 import at.chex.archichexture.model.TitledBaseEntity;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.xml.bind.annotation.XmlElement;
 
@@ -16,7 +15,7 @@ import javax.xml.bind.annotation.XmlElement;
 public abstract class TitledBaseDto<ENTITY extends TitledBaseEntity> extends BaseDto<ENTITY> {
 
   private static final long serialVersionUID = 1L;
-  @DefaultValue("-1")
+
   @FormParam(TitledBaseEntity.FIELD_NAME_TITLE)
   @XmlElement(name = TitledBaseEntity.FIELD_NAME_TITLE)
   public String title;

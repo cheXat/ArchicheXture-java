@@ -260,19 +260,19 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
       }
     }
 
-    if (null != queryAttributes && queryAttributes.size() > 0) {
+    if (queryAttributes.size() > 0) {
       /**
        * Add all query parameters
        */
       query.where(getPredicateForQueryArgumentsMap(queryAttributes).toArray(new Predicate[0]));
-      /**
-       * Prepare and add all sort parameters
-       */
-      List<OrderSpecifier<?>> sortParameter = getSortParameter(queryAttributes);
-      if (null != sortParameter && sortParameter.size() > 0) {
-        log.debug("ordering by {} parameters", sortParameter.size());
-        query.orderBy(sortParameter.toArray(new OrderSpecifier[0]));
-      }
+    }
+    /**
+     * Prepare and add all sort parameters
+     */
+    List<OrderSpecifier<?>> sortParameter = getSortParameter(queryAttributes);
+    if (null != sortParameter && sortParameter.size() > 0) {
+      log.debug("ordering by {} parameters", sortParameter.size());
+      query.orderBy(sortParameter.toArray(new OrderSpecifier[0]));
     }
     /**
      * Limit and offset go together
@@ -285,7 +285,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
      */
     List<ENTITY> returnList = new ArrayList<ENTITY>(addAdditionalQueryAttributes(
         query).list(getEntityPath()));
-    if (null != queryAttributes && null != queryAttributes.get(ARGUMENT_ENTITY_ID)) {
+    if (null != queryAttributes.get(ARGUMENT_ENTITY_ID)) {
       List<ENTITY> idList = new ArrayList<ENTITY>();
       if (null != arguments) {
         for (String arg : arguments.get(ARGUMENT_ENTITY_ID)) {
@@ -322,19 +322,19 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
       log.debug("Returning entity {}", returnEntity);
       return returnEntity;
     }
-    if (null == entity) {
-      JPAQuery query = createQuery().from(getEntityPath()).where(getIdPredicate(id))
-          .where(getActivePredicate(true));
-      if (getPermanentQueryAttributes().size() > 0) {
-        query.where(getPredicateForQueryArgumentsMap(getPermanentQueryAttributes())
-            .toArray(new Predicate[0]));
-      }
-      ENTITY returnEntity = query
-          .singleResult(getEntityPath());
-      log.debug("Returning entity {}", returnEntity);
-      return returnEntity;
+
+    JPAQuery query = createQuery().from(getEntityPath()).where(getIdPredicate(id))
+        .where(getActivePredicate(true));
+    if (getPermanentQueryAttributes().size() > 0) {
+      query.where(getPredicateForQueryArgumentsMap(getPermanentQueryAttributes())
+          .toArray(new Predicate[0]));
     }
-    return null;
+
+    ENTITY returnEntity = query
+        .singleResult(getEntityPath());
+    log.debug("Returning entity {}", returnEntity);
+
+    return returnEntity;
   }
 
   @Override

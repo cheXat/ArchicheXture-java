@@ -1,6 +1,7 @@
 package at.chex.archichexture.model;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 import java.io.Serializable;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -23,8 +24,8 @@ public abstract class BaseEntity implements Serializable {
   public static final String FIELD_NAME_ID = "id";
   private static final long serialVersionUID = 1L;
   /**
-   * We expect, the database takes care about generating the primary key.
-   * Of course, you can generate it yourself and set it via {@link #setId(Long)}
+   * We expect, the database takes care about generating the primary key. Of course, you can
+   * generate it yourself and set it via {@link #setId(Long)}
    */
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -63,5 +64,22 @@ public abstract class BaseEntity implements Serializable {
     return MoreObjects.toStringHelper(this)
         .add("id", id)
         .toString();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof BaseEntity)) {
+      return false;
+    }
+    BaseEntity that = (BaseEntity) o;
+    return Objects.equal(getId(), that.getId());
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(getId());
   }
 }

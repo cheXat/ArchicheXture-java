@@ -1,6 +1,7 @@
 package at.chex.archichexture.repository.impl;
 
 import at.chex.archichexture.model.BaseEntity;
+import at.chex.archichexture.model.DocumentedEntity;
 import at.chex.archichexture.repository.BaseRepository;
 import com.google.common.base.Strings;
 import com.mysema.query.BooleanBuilder;
@@ -13,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -364,6 +366,17 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
       return false;
     }
 
+    if (entity instanceof DocumentedEntity && ((DocumentedEntity) entity)
+        .isDeletedByDeactivation()) {
+      Boolean visibleBefore = ((DocumentedEntity) entity).getActive();
+      visibleBefore = null == visibleBefore ? true : visibleBefore;
+      ((DocumentedEntity) entity).setActive(false);
+      if (visibleBefore) {
+        ((DocumentedEntity) entity).setDeletedAt(new Date());
+      }
+      save(entity);
+      return visibleBefore;
+    }
     if (!getEntityManager().contains(entity)) {
       log.debug("Tried to delete entity {}, but it was not contained in the entitymanager");
       return false;
@@ -377,6 +390,16 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
     if (null == entity) {
       log.debug("Save called for NULL entity");
       return null;
+    }
+
+    if (entity instanceof DocumentedEntity) {
+      if (null == ((DocumentedEntity) entity).getCreatedAt()) {
+        ((DocumentedEntity) entity).setCreatedAt(new Date());
+      }
+      if (null == ((DocumentedEntity) entity).getActive()) {
+        ((DocumentedEntity) entity).setActive(true);
+      }
+      ((DocumentedEntity) entity).setUpdatedAt(new Date());
     }
 
     log.trace("Save called for entity {}", entity);

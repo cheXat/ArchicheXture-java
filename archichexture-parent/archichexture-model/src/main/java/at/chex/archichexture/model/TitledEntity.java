@@ -12,7 +12,7 @@ import javax.persistence.MappedSuperclass;
  * @since 16/04/2017
  */
 @MappedSuperclass
-public abstract class TitledBaseEntity extends BaseEntity {
+public abstract class TitledEntity extends BaseEntity {
 
   public static final String FIELD_NAME_TITLE = "title";
   /**

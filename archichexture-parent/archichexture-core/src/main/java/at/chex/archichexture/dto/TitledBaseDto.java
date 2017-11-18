@@ -1,23 +1,23 @@
 package at.chex.archichexture.dto;
 
-import at.chex.archichexture.model.TitledBaseEntity;
+import at.chex.archichexture.model.TitledEntity;
 import javax.ws.rs.FormParam;
 import javax.xml.bind.annotation.XmlElement;
 
 /**
- * Use this to transport {@link TitledBaseEntity}
+ * Use this to transport {@link TitledEntity}
  *
  * @author cheX GmbH Austria {@literal chex@chex.at}
  * @author Jakob Galbavy {@literal jg@chex.at}
  * @version 1.0
  * @since 24/03/2017
  */
-public abstract class TitledBaseDto<ENTITY extends TitledBaseEntity> extends BaseDto<ENTITY> {
+public abstract class TitledBaseDto<ENTITY extends TitledEntity> extends BaseDto<ENTITY> {
 
   private static final long serialVersionUID = 1L;
 
-  @FormParam(TitledBaseEntity.FIELD_NAME_TITLE)
-  @XmlElement(name = TitledBaseEntity.FIELD_NAME_TITLE)
+  @FormParam(TitledEntity.FIELD_NAME_TITLE)
+  @XmlElement(name = TitledEntity.FIELD_NAME_TITLE)
   public String title;
 
   /**

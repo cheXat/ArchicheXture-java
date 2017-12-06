@@ -1,6 +1,7 @@
 package at.chex.archichexture.model;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 
@@ -40,5 +41,25 @@ public abstract class TitledEntity extends BaseEntity {
     return MoreObjects.toStringHelper(this)
         .add("title", title)
         .toString();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof TitledEntity)) {
+      return false;
+    }
+    if (!super.equals(o)) {
+      return false;
+    }
+    TitledEntity that = (TitledEntity) o;
+    return Objects.equal(getTitle(), that.getTitle());
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(super.hashCode(), getTitle());
   }
 }

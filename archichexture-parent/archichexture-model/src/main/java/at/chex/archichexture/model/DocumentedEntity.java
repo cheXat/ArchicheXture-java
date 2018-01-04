@@ -1,5 +1,6 @@
 package at.chex.archichexture.model;
 
+import at.chex.archichexture.annotation.Aspect;
 import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
@@ -25,6 +26,7 @@ public class DocumentedEntity extends TitledEntity {
   @Column(name = "deleted_at")
   @Temporal(TemporalType.TIMESTAMP)
   private Date deletedAt = null;
+  @Aspect
   @Column(name = FIELD_NAME_ACTIVE)
   private Boolean active = true;
 

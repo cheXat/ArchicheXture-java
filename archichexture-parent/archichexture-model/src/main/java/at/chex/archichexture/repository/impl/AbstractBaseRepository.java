@@ -1,15 +1,24 @@
 package at.chex.archichexture.repository.impl;
 
+import at.chex.archichexture.annotation.AlternativeNames;
+import at.chex.archichexture.annotation.Aspect;
+import at.chex.archichexture.collections.Values;
 import at.chex.archichexture.model.BaseEntity;
 import at.chex.archichexture.model.DocumentedEntity;
+import at.chex.archichexture.model.QBaseEntity;
+import at.chex.archichexture.reflect.Reflection;
 import at.chex.archichexture.repository.BaseRepository;
 import com.google.common.base.Strings;
+import com.google.common.reflect.TypeToken;
 import com.mysema.query.BooleanBuilder;
 import com.mysema.query.jpa.JPASubQuery;
 import com.mysema.query.jpa.impl.JPAQuery;
 import com.mysema.query.types.OrderSpecifier;
 import com.mysema.query.types.Predicate;
 import com.mysema.query.types.path.EntityPathBase;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -19,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import javax.annotation.PostConstruct;
 import javax.persistence.EntityManager;
 import org.slf4j.Logger;
@@ -36,13 +46,24 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implements
     BaseRepository<ENTITY> {
 
-  /**
-   * Filter/Sort attributes
-   */
+  private static final String METHOD_EQUALS = "eq";
+  private static final String METHOD_LIKE = "likeIgnoreCase";
+  private static final String METHOD_IN = "in";
+  private static final String METHOD_SORT_ASC = "asc";
+  private static final String METHOD_SORT_DESC = "desc";
+
+  private static final String SORT_FIELD = "_order_by";
+  private static final String SORT_DIRECTION = "_order_dir";
+  private static final String SORT_DIRECTION_VALUE_REVERSE = "desc";
+
+
   /**
    * Logger
    */
   private static final Logger log = LoggerFactory.getLogger(AbstractBaseRepository.class);
+  private final TypeToken<ENTITY> typeToken = new TypeToken<ENTITY>(getClass()) {
+
+  };
   /**
    * Additional stuff
    */
@@ -92,10 +113,9 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
    */
   protected abstract EntityManager getEntityManager();
 
-  /**
-   * We need the class of the {@link ENTITY} here. <p> ... return MyAwesomeClass.class; ...
-   */
-  protected abstract Class<ENTITY> getEntityClass();
+  private Class<ENTITY> getEntityClass() {
+    return (Class<ENTITY>) typeToken.getRawType();
+  }
 
   /**
    * Override this to make your {@link ENTITY}-Query aware of an active or inactive state (that is
@@ -145,13 +165,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
 
     try {
       return getEntityClass().newInstance();
-    } catch (InstantiationException e) {
-      log.error(
-          "Entity {} doesn't implement an empty default constructor!",
-          getEntityClass(), e);
-      throw new RuntimeException(
-          "Entity doesn't implement an empty default constructor!");
-    } catch (IllegalAccessException e) {
+    } catch (InstantiationException | IllegalAccessException e) {
       log.error(
           "Entity {} doesn't implement an empty default constructor!",
           getEntityClass(), e);
@@ -164,6 +178,10 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
    * Override this to add {@link Predicate}s to the Arguments of Queries according to the given
    * RequestParameters {@link Map} <p> Start the implementation with super.getPredicateForQueryArgumentsMap()
    * and add your values here.
+   *
+   * Fields annotated with {@link Aspect} will be filtered automatically.
+   *
+   * Add just those, that can't be determined automatically (e.g. you have a field 'date' and you want to implement date_from and date_to)
    */
   protected Collection<Predicate> getPredicateForQueryArgumentsMap(
       Map<String, List<String>> arguments) {
@@ -188,7 +206,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
      */
     if (arguments.containsKey(ARGUMENT_IGNORE_ACTIVE)) {
       List<String> activeArgumentList = arguments
-          .getOrDefault(ARGUMENT_IGNORE_ACTIVE, Arrays.asList("false"));
+          .getOrDefault(ARGUMENT_IGNORE_ACTIVE, Collections.singletonList("false"));
       if (null == activeArgumentList || activeArgumentList.size() < 1) {
         /**
          * Defaulting, if none set
@@ -206,7 +224,187 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
     } else {
       list.add(getActivePredicate(true));
     }
+
+    Class<?> classToProcess = getEntityClass();
+    do {
+      list.addAll(processEntityClassWithReflection(classToProcess, arguments));
+    } while (null != (classToProcess = classToProcess.getSuperclass()));
     return list;
+  }
+
+  private <T> boolean arrayContainsValue(T[] array, T value) {
+    if (null == value) {
+      return false;
+    }
+    for (T arrayValue : array) {
+      if (null != arrayValue && arrayValue.equals(value)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private OrderSpecifier<?> getSortParameter(Map<String, List<String>> arguments) {
+    if (arguments.containsKey(SORT_FIELD)) {
+      List<String> sortFieldList = arguments.get(SORT_FIELD);
+      if (null == sortFieldList || sortFieldList.isEmpty()) {
+        log.debug("Sort parameters empty.");
+        return null;
+      }
+      List<String> sortDirectionList = arguments.get(SORT_DIRECTION);
+      String sortDirection =
+          null == sortDirectionList || sortDirectionList.isEmpty() ? "" : sortDirectionList.get(0);
+      log.debug("Sort direction is {}.", sortDirection);
+
+      Class<?> classToProcess = getEntityClass();
+      do {
+        OrderSpecifier orderSpecifier = sortEntitiesByFieldByReflection(classToProcess,
+            sortFieldList.get(0), sortDirection);
+        if (null != orderSpecifier) {
+          log.debug("Returning orderSpecifier {}", orderSpecifier);
+          return orderSpecifier;
+        }
+      } while (null != (classToProcess = classToProcess.getSuperclass()));
+    } else {
+      log.debug("No sort parameter given.");
+    }
+    return null;
+  }
+
+
+  private OrderSpecifier sortEntitiesByFieldByReflection(Class<?> clazz,
+      String value, String direction) {
+    if (null == clazz || Strings.isNullOrEmpty(value)) {
+      log.warn("Unable to process class {} or value {}", clazz, value);
+      return null;
+    }
+
+    for (Field field : clazz.getDeclaredFields()) {
+      if (field.isAnnotationPresent(Aspect.class)) {
+        Aspect aspect = field.getAnnotation(Aspect.class);
+        log.debug("Processing aspect (sort) for Field:{}", field);
+
+        String[] filterNames = new String[0];
+        if (field.isAnnotationPresent(AlternativeNames.class)) {
+          AlternativeNames alternativeNames = field.getAnnotation(AlternativeNames.class);
+          filterNames = alternativeNames.value();
+        }
+
+        if (aspect.filterable() && (field.getName().equals(value) || arrayContainsValue(
+            filterNames, value))) {
+          log.debug("This is the aspect we are filtering for! {}", aspect);
+
+          EntityPathBase<ENTITY> entityPath = getEntityPath();
+          try {
+            Field fieldDefinition = entityPath.getClass().getField(field.getName());
+            Object fieldFromEntity = fieldDefinition.get(entityPath);
+            String methodToInvoke =
+                SORT_DIRECTION_VALUE_REVERSE.equals(direction) ? METHOD_SORT_DESC : METHOD_SORT_ASC;
+            log.debug("Trying to invoke Method {} with parameter of type {} on class {}",
+                methodToInvoke, field.getType(), fieldFromEntity.getClass());
+            Method method;
+            try {
+              method = fieldFromEntity.getClass()
+                  .getMethod(methodToInvoke);
+            } catch (NoSuchMethodException e) {
+              log.debug(
+                  "Fallback <{}> of Class <{}> not found by reflection! Retrying with Parameter type Object",
+                  value, clazz.getName());
+              method = fieldFromEntity.getClass()
+                  .getMethod(methodToInvoke, Object.class);
+            }
+
+            Object invocationResult = method.invoke(fieldFromEntity);
+            if (invocationResult instanceof OrderSpecifier) {
+              return (OrderSpecifier) invocationResult;
+            } else {
+              log.error("Invocation Result was NOT a Predicate: {}", invocationResult);
+            }
+          } catch (IllegalAccessException e) {
+            log.error("Field <{}> of Class <{}> cannot be accessed by reflection!", value,
+                entityPath.getClass().getName(), e);
+          } catch (NoSuchFieldException e) {
+            log.error(
+                "Field <{}> of Class <{}> not found by reflection! Did you add a new field in the JPA Model and forgot to rerun the QEntity generation?",
+                value,
+                entityPath.getClass().getName(), e);
+          } catch (NoSuchMethodException e) {
+            log.error("Method <{}> of Class <{}> not found by reflection!", value, clazz.getName(),
+                e);
+          } catch (InvocationTargetException e) {
+            log.error("Method <{}> of Class <{}> cannot be invoked by reflection!", value,
+                clazz.getName(), e);
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  private List<Predicate> processEntityClassWithReflection(Class<?> clazz,
+      Map<String, List<String>> arguments) {
+    List<Predicate> predicateList = new ArrayList<>();
+    for (Field field : clazz.getDeclaredFields()) {
+      if (field.isAnnotationPresent(Aspect.class)) {
+        Aspect aspect = field.getAnnotation(Aspect.class);
+        log.debug("Processing aspect for Field:{}", field);
+        if (aspect.filterable()) {
+          List<String> filterNames = new ArrayList<>();
+
+          if (field.isAnnotationPresent(AlternativeNames.class)) {
+            AlternativeNames alternativeNames = field.getAnnotation(AlternativeNames.class);
+            filterNames.addAll(Arrays.asList(alternativeNames.value()));
+          }
+
+          String name = field.getName();
+          filterNames.add(name);
+          Set<String> valuesForKeys = Values.getValuesForKeys(arguments, filterNames);
+          if (!valuesForKeys.isEmpty()) {
+            EntityPathBase<ENTITY> entityPath = getEntityPath();
+            try {
+              Field fieldDefinition = entityPath.getClass().getField(name);
+              Object fieldFromEntity = fieldDefinition.get(entityPath);
+              String methodToInvoke =
+                  !aspect.strict() && field.getType().equals(String.class) ? METHOD_LIKE
+                      : METHOD_EQUALS;
+              if (valuesForKeys.size() > 1) {
+                methodToInvoke = METHOD_IN;
+              }
+              log.debug("Trying to invoke Method {} with parameter of type {} on class {}",
+                  methodToInvoke, field.getType(), fieldFromEntity.getClass());
+
+              Method method = Reflection
+                  .getMethodByReflection(fieldFromEntity, methodToInvoke, field.getType());
+
+              for (String value : valuesForKeys) {
+                //(field.getType()) value;
+                Object invocationResult = Reflection
+                    .invokeMethodWithCorrectArgumentsType(fieldFromEntity, method, field.getType(),
+                        value);
+                if (invocationResult instanceof Predicate) {
+                  predicateList.add((Predicate) invocationResult);
+                } else {
+                  log.error("Invocation Result was NOT a Predicate: {}", invocationResult);
+                }
+              }
+            } catch (IllegalAccessException e) {
+              log.error("Field <{}> of Class <{}> cannot be accessed by reflection!", name,
+                  entityPath.getClass().getName(), e);
+            } catch (NoSuchFieldException e) {
+              log.error("Field <{}> of Class <{}> not found by reflection!", name,
+                  entityPath.getClass().getName(), e);
+            } catch (NoSuchMethodException e) {
+              log.error("Method <{}> of Class <{}> not found by reflection!", name, clazz.getName(),
+                  e);
+            } catch (InvocationTargetException e) {
+              log.error("Method <{}> of Class <{}> cannot be invoked by reflection!", name,
+                  clazz.getName(), e);
+            }
+          }
+        }
+      }
+    }
+    return predicateList;
   }
 
   /**
@@ -225,13 +423,6 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
    */
   private Map<String, List<String>> getPermanentQueryAttributes() {
     return permanentQueryAttributes;
-  }
-
-  /**
-   * Override this to sort in a non-default way
-   */
-  protected List<OrderSpecifier<?>> getSortParameter(Map<String, List<String>> arguments) {
-    return new ArrayList<OrderSpecifier<?>>();
   }
 
   /**
@@ -256,7 +447,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
     if (null != arguments) {
       for (Entry<String, List<String>> entry : arguments.entrySet()) {
         if (!queryAttributes.containsKey(entry.getKey())) {
-          queryAttributes.put(entry.getKey(), new ArrayList<String>());
+          queryAttributes.put(entry.getKey(), new ArrayList<>());
         }
         queryAttributes.get(entry.getKey()).addAll(entry.getValue());
       }
@@ -271,10 +462,10 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
     /**
      * Prepare and add all sort parameters
      */
-    List<OrderSpecifier<?>> sortParameter = getSortParameter(queryAttributes);
-    if (null != sortParameter && sortParameter.size() > 0) {
-      log.debug("ordering by {} parameters", sortParameter.size());
-      query.orderBy(sortParameter.toArray(new OrderSpecifier[0]));
+    OrderSpecifier<?> sortParameter = getSortParameter(queryAttributes);
+    if (null != sortParameter) {
+      log.debug("ordering by parameter {}", sortParameter);
+      query.orderBy(sortParameter);
     }
     /**
      * Limit and offset go together
@@ -285,10 +476,10 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
     /**
      * Execute the query
      */
-    List<ENTITY> returnList = new ArrayList<ENTITY>(addAdditionalQueryAttributes(
+    List<ENTITY> returnList = new ArrayList<>(addAdditionalQueryAttributes(
         query).list(getEntityPath()));
     if (null != queryAttributes.get(ARGUMENT_ENTITY_ID)) {
-      List<ENTITY> idList = new ArrayList<ENTITY>();
+      List<ENTITY> idList = new ArrayList<>();
       if (null != arguments) {
         for (String arg : arguments.get(ARGUMENT_ENTITY_ID)) {
           idList.add(findEntityById(Long.valueOf(arg)));
@@ -307,8 +498,6 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
     return query;
   }
 
-  protected abstract Predicate getIdPredicate(Long id);
-
   @Override
   public ENTITY findEntityById(Long id) {
     if (null == id) {
@@ -316,24 +505,26 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
       return null;
     }
 
-    ENTITY entity = null;
-    // we can use the cached entitymanager entity only, when there are no additional arguments
+    EntityPathBase<ENTITY> entityPath = getEntityPath();
+
     if (getPermanentQueryAttributes().size() < 1) {
-      entity = getEntityManager().find(getEntityClass(), id);
+      // we can use the cached entitymanager entity only, when there are no additional arguments
+      ENTITY entity = getEntityManager().find(getEntityClass(), id);
       ENTITY returnEntity = isActiveEntity(entity) ? entity : null;
       log.debug("Returning entity {}", returnEntity);
       return returnEntity;
     }
 
-    JPAQuery query = createQuery().from(getEntityPath()).where(getIdPredicate(id))
+    JPAQuery query = createQuery().from(entityPath).where(((QBaseEntity) entityPath).id.eq(id))
         .where(getActivePredicate(true));
+
     if (getPermanentQueryAttributes().size() > 0) {
       query.where(getPredicateForQueryArgumentsMap(getPermanentQueryAttributes())
           .toArray(new Predicate[0]));
     }
 
     ENTITY returnEntity = query
-        .singleResult(getEntityPath());
+        .singleResult(entityPath);
     log.debug("Returning entity {}", returnEntity);
 
     return returnEntity;
@@ -346,7 +537,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
       return Collections.emptyList();
     }
 
-    List<ENTITY> returnList = new ArrayList<ENTITY>();
+    List<ENTITY> returnList = new ArrayList<>();
     for (Long id : idList) {
       ENTITY entity = findEntityById(id);
       // TODO optimize with list query for those not in the EntityManager

@@ -1,12 +1,17 @@
 package at.chex.archichexture.rest;
 
+import at.chex.archichexture.annotation.AlternativeNames;
+import at.chex.archichexture.annotation.Aspect;
 import at.chex.archichexture.dto.BaseDto;
 import at.chex.archichexture.model.BaseEntity;
+import at.chex.archichexture.reflect.Reflection;
 import at.chex.archichexture.repository.BaseRepository;
 import at.chex.archichexture.rest.config.RestConfig;
 import at.chex.archichexture.rest.config.RestConfigFactory;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import javax.ws.rs.core.MultivaluedMap;
@@ -29,26 +34,10 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
 
   private static final long serialVersionUID = 1L;
   private static final Logger log = LoggerFactory.getLogger(BaseRestController.class);
-  private boolean initialized = false;
-  private RestConfig restConfig;
+  private RestConfig restConfig = RestConfigFactory.get();
 
   protected RestConfig getConfig() {
     return this.restConfig;
-  }
-
-  /**
-   * If this is false, try #init() before
-   */
-  protected boolean isInitialized() {
-    return initialized;
-  }
-
-  /**
-   * Make sure to initialize any controller with this method before using it
-   */
-  public void init() {
-    this.restConfig = RestConfigFactory.get();
-    this.initialized = true;
   }
 
   /**
@@ -78,8 +67,42 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
   /**
    * Map all values, you need from the {@link DTO} to the {@link ENTITY} and save it afterwards!
    */
-  protected abstract ENTITY updateOrCreateEntityFromParameters(
-      DTO formObject, ENTITY entity) throws IllegalArgumentException;
+  private ENTITY updateOrCreateEntityFromParameters(
+      DTO formObject, ENTITY entity) throws IllegalArgumentException {
+    log.debug("Comparing entity {} with dto {}", entity, formObject);
+    for (Field fieldToSetOnEntity : entity.getClass().getDeclaredFields()) {
+      if (fieldToSetOnEntity.isAnnotationPresent(Aspect.class)) {
+        Aspect aspect = fieldToSetOnEntity.getAnnotation(Aspect.class);
+        log.debug("Processing aspect for Field:{}", fieldToSetOnEntity);
+        if (aspect.modifieable()) {
+          List<String> filterNames = new ArrayList<>();
+          filterNames.add(fieldToSetOnEntity.getName());
+          if (fieldToSetOnEntity.isAnnotationPresent(AlternativeNames.class)) {
+            AlternativeNames alternativeNames = fieldToSetOnEntity
+                .getAnnotation(AlternativeNames.class);
+            filterNames.addAll(Arrays.asList(alternativeNames.value()));
+          }
+
+          Field valueFieldFromFormObject = Reflection
+              .getFieldFromClassInStringList(formObject.getClass(), filterNames);
+
+          if (null != valueFieldFromFormObject) {
+            Object object = null;
+            try {
+              valueFieldFromFormObject.setAccessible(true);
+              object = valueFieldFromFormObject.get(formObject);
+              fieldToSetOnEntity.setAccessible(true);
+              fieldToSetOnEntity.set(entity, object);
+            } catch (IllegalAccessException e) {
+              log.error("Unable to set Field <{}> with dataType {} to value {}", fieldToSetOnEntity,
+                  fieldToSetOnEntity.getType(), object, e.getLocalizedMessage());
+            }
+          }
+        }
+      }
+    }
+    return getEntityRepository().save(entity);
+  }
 
   /**
    * Override this to interfere with entity creation
@@ -165,12 +188,6 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
   }
 
   /**
-   * Transform the given {@link ENTITY} to the corresponding Dto before
-   * returning it after the webservice call.
-   */
-  protected abstract DTO transformToDto(ENTITY entity);
-
-  /**
    * Process the GET List Request here.
    */
   protected Response internalGETListRequest(UriInfo info, int limit, int offset) {
@@ -215,7 +232,7 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
   }
 
   protected List<DTO> transformToDto(List<ENTITY> entityList) {
-    List<DTO> returnList = new ArrayList<DTO>();
+    List<DTO> returnList = new ArrayList<>();
     for (ENTITY e : entityList) {
       DTO entityBaseDto = null == e ? null : transformToDto(e);
       if (null != entityBaseDto) {
@@ -224,4 +241,10 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
     }
     return returnList;
   }
+
+  /**
+   * Transform the given {@link ENTITY} to the corresponding Dto before
+   * returning it after the webservice call.
+   */
+  protected abstract DTO transformToDto(ENTITY entity);
 }

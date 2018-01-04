@@ -3,7 +3,6 @@ package at.chex.archichexture.test.repository.impl;
 import at.chex.archichexture.repository.impl.AbstractBaseRepository;
 import at.chex.archichexture.test.model.TestEntity;
 import at.chex.archichexture.test.repository.TestRepository;
-import com.mysema.query.types.Predicate;
 import com.mysema.query.types.path.EntityPathBase;
 import javax.inject.Named;
 import javax.persistence.EntityManager;
@@ -24,16 +23,6 @@ public class StatelessTestRepository extends AbstractBaseRepository<TestEntity> 
 
   @Override
   protected EntityManager getEntityManager() {
-    return null;
-  }
-
-  @Override
-  protected Class<TestEntity> getEntityClass() {
-    return null;
-  }
-
-  @Override
-  protected Predicate getIdPredicate(Long id) {
     return null;
   }
 }

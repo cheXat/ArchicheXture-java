@@ -29,7 +29,7 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
     BaseRestController<ENTITY, DTO> {
 
   private static final Logger log = LoggerFactory.getLogger(BaseRestController.class);
-  private TokenCheck tokenCheck;
+  private TokenCheck tokenCheck = (token, resetTokenExpiration) -> 0;
   private boolean readonlyController = true;
 
   /**
@@ -43,8 +43,9 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
    * CAUTION: Ensure, that one of the init methods is called before handling any requests
    */
   public void init(TokenCheck tokenCheck, boolean readonlyController) {
-    super.init();
-    this.tokenCheck = tokenCheck;
+    if (null != tokenCheck) {
+      this.tokenCheck = tokenCheck;
+    }
     this.readonlyController = readonlyController;
   }
 
@@ -58,10 +59,6 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
       @QueryParam(value = "reset_token") @DefaultValue("true") boolean resetTokenTimes,
       @QueryParam(value = "token") String token) {
 
-    if (!this.isInitialized()) {
-      log.error("Uninitialized Rest Controller! Call init() before doing anything else!");
-      return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-    }
     log.trace("GET:/ with Parameters. reset_token:{}, token:{}, limit:{}, offset:{}",
         resetTokenTimes, token, limit, offset);
 
@@ -99,10 +96,6 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
       @QueryParam(value = "reset_token") @DefaultValue("true") boolean resetTokenTimes,
       @QueryParam(value = "token") String token) {
 
-    if (!this.isInitialized()) {
-      log.error("Uninitialized Rest Controller! Call init() before doing anything else!");
-      return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-    }
     log.trace("GET:/id with Parameters. id:{}, reset_token:{}, token:{}", id, resetTokenTimes,
         token);
 
@@ -130,11 +123,6 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
       @QueryParam(value = "reset_token") @DefaultValue("true") boolean resetTokenTimes,
       @QueryParam(value = "token") String token) {
 
-    if (!this.isInitialized()) {
-      log.error("Uninitialized Rest Controller! Call init() before doing anything else!");
-      return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-    }
-
     if (this.isReadonlyController()) {
       log.warn("Tried to PUT on a readonly controller!");
       return Response.status(Response.Status.BAD_REQUEST).build();
@@ -159,11 +147,6 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
       @BeanParam DTO formParam,
       @QueryParam(value = "reset_token") @DefaultValue("true") boolean resetTokenTimes,
       @QueryParam(value = "token") String token) {
-
-    if (!this.isInitialized()) {
-      log.error("Uninitialized Rest Controller! Call init() before doing anything else!");
-      return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-    }
 
     if (this.isReadonlyController()) {
       log.warn("Tried to POST on a readonly controller!");
@@ -200,11 +183,6 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
       @QueryParam(value = "reset_token") @DefaultValue("true") boolean resetTokenTimes,
       @QueryParam(value = "token") String token) {
 
-    if (!this.isInitialized()) {
-      log.error("Uninitialized Rest Controller! Call init() before doing anything else!");
-      return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-    }
-
     if (this.isReadonlyController()) {
       log.warn("Tried to DELETE on a readonly controller!");
       return Response.status(Response.Status.BAD_REQUEST).build();
@@ -222,11 +200,6 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
    * Delete the entity with the given id
    */
   protected Response internalExecuteDELETERequest(Long id, String token, boolean resetTokenTimes) {
-    if (!this.isInitialized()) {
-      log.error("Uninitialized Rest Controller! Call init() before doing anything else!");
-      return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-    }
-
     if (this.readonlyController) {
       return Response.status(Response.Status.BAD_REQUEST).build();
     }

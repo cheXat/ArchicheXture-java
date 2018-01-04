@@ -1,5 +1,6 @@
 package at.chex.archichexture.model;
 
+import at.chex.archichexture.annotation.Aspect;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import javax.persistence.Column;
@@ -19,6 +20,7 @@ public abstract class TitledEntity extends BaseEntity {
   /**
    * The title of this Entity
    */
+  @Aspect
   @Column(name = FIELD_NAME_TITLE)
   private String title;
 

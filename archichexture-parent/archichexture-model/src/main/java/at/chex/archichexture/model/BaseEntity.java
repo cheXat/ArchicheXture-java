@@ -1,5 +1,6 @@
 package at.chex.archichexture.model;
 
+import at.chex.archichexture.annotation.Aspect;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import java.io.Serializable;
@@ -27,6 +28,7 @@ public abstract class BaseEntity implements Serializable {
    * We expect, the database takes care about generating the primary key. Of course, you can
    * generate it yourself and set it via {@link #setId(Long)}
    */
+  @Aspect(modifieable = false, strict = true)
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @XmlElement(name = FIELD_NAME_ID)

@@ -24,28 +24,42 @@ public class Reflection {
     if (null == clazz || null == list || list.isEmpty()) {
       return null;
     }
-    for (String value : list) {
-      try {
-        Field field = clazz.getDeclaredField(value);
-        if (null != field) {
-          return field;
+    Class<?> classToWorkWith = clazz;
+
+    do {
+      for (String value : list) {
+        try {
+          Field field = classToWorkWith.getDeclaredField(value);
+          if (null != field) {
+            return field;
+          }
+        } catch (NoSuchFieldException e) {
+          // do nothing
         }
-      } catch (NoSuchFieldException e) {
-        // do nothing
       }
-    }
+    } while (null != (classToWorkWith = classToWorkWith.getSuperclass()));
     return null;
   }
 
   public static Method getMethodByReflection(Object field, String methodToInvoke,
-      Class<?> argumentType)
-      throws NoSuchMethodException {
+      Class<?> argumentType) throws NoSuchMethodException {
+    Class<?> classToWorkWith = field.getClass();
+    do {
+      try {
+        return innerGetMethodByReflection(classToWorkWith, methodToInvoke, argumentType);
+      } catch (NoSuchMethodException e) {
+        // do nothing
+      }
+    } while (null != (classToWorkWith = classToWorkWith.getSuperclass()));
+    throw new NoSuchMethodException("Method " + methodToInvoke + " not found.");
+  }
+
+  private static Method innerGetMethodByReflection(Class<?> clazz, String methodToInvoke,
+      Class<?> argumentType) throws NoSuchMethodException {
     try {
-      return field.getClass()
-          .getMethod(methodToInvoke, argumentType);
+      return clazz.getMethod(methodToInvoke, argumentType);
     } catch (NoSuchMethodException e) {
-      return field.getClass()
-          .getMethod(methodToInvoke, Object.class);
+      return clazz.getMethod(methodToInvoke, Object.class);
     }
   }
 

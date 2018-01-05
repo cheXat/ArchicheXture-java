@@ -55,7 +55,7 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
   private ENTITY updateOrCreateEntityFromParameters(
       DTO formObject, ENTITY entity) throws IllegalArgumentException {
     ENTITY entityWithValues = Reflection.transferValuesFromLeftToRight(formObject, entity);
-
+    log.debug("Entity after transfer is {}", entityWithValues);
     return getEntityRepository().save(updateAdditionalParameters(formObject, entityWithValues));
   }
 

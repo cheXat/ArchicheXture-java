@@ -24,6 +24,9 @@ public class ExampleDto extends BaseDto<Example> {
   @FormParam("blubber")
   @JsonProperty("blubber")
   private String blubber;
+  @FormParam("date")
+  @JsonProperty("date")
+  private String date;
 
   public ExampleDto() {
 
@@ -34,6 +37,7 @@ public class ExampleDto extends BaseDto<Example> {
     this.title = example.getTitle();
     this.ever = example.getWhatever();
     this.blubber = example.getBlub();
+    this.date = String.valueOf(example.getDate().getTime());
   }
 
   @Override
@@ -43,6 +47,7 @@ public class ExampleDto extends BaseDto<Example> {
         .add("ever", ever)
         .add("blubber", blubber)
         .add("id", id)
+        .add("date", date)
         .toString();
   }
 }

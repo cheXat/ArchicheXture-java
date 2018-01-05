@@ -4,7 +4,6 @@ import at.chex.archichexture.annotation.AlternativeNames;
 import at.chex.archichexture.annotation.Aspect;
 import at.chex.archichexture.annotation.RemoveOnDelete;
 import at.chex.archichexture.model.DocumentedEntity;
-import com.google.common.base.MoreObjects;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
@@ -20,7 +19,7 @@ import javax.persistence.Table;
  * The {@link at.chex.archichexture.annotation.RemoveOnDelete} Annotation defines, if this {@link Entity} is deactivated (default, when subclassing {@link DocumentedEntity}) or deleted (Annotation present)
  */
 @RemoveOnDelete
-public class Example extends DocumentedEntity {
+public class Example extends DateExample {
 
   @Aspect(filterable = true, strict = true)
   @AlternativeNames({"what", "ever"})
@@ -48,11 +47,4 @@ public class Example extends DocumentedEntity {
     this.blub = blub;
   }
 
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("whatever", whatever)
-        .add("blub", blub)
-        .toString();
-  }
 }

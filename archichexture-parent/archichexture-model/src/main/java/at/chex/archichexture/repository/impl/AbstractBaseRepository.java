@@ -8,7 +8,6 @@ import at.chex.archichexture.helpers.Values;
 import at.chex.archichexture.model.BaseEntity;
 import at.chex.archichexture.model.DocumentedEntity;
 import at.chex.archichexture.model.QBaseEntity;
-import at.chex.archichexture.model.QDocumentedEntity;
 import at.chex.archichexture.repository.BaseRepository;
 import com.google.common.base.Strings;
 import com.google.common.reflect.TypeToken;
@@ -119,17 +118,20 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
     return (Class<ENTITY>) typeToken.getRawType();
   }
 
-  /**
-   * Override this to make your {@link ENTITY}-Query aware of an active or inactive state (that is
-   * the argument). Make sure to also override {@link #isActiveEntity(BaseEntity)} when overriding
-   * this.
-   */
   private Predicate getActivePredicate(boolean activeState) {
     EntityPathBase<ENTITY> entityPath = getEntityPath();
-    if (entityPath instanceof QDocumentedEntity) {
-      return ((QDocumentedEntity) entityPath).active.eq(true);
+    try {
+      Field declaredField = entityPath.getClass()
+          .getDeclaredField(DocumentedEntity.FIELD_NAME_ACTIVE);
+      Object fieldFromEntity = declaredField.get(entityPath);
+      log.debug("Returning active Query Predicate on Field {}", fieldFromEntity);
+      Method method = Reflection
+          .getMethodByReflection(fieldFromEntity, METHOD_EQUALS, Boolean.class);
+      return (Predicate) method.invoke(fieldFromEntity, Boolean.valueOf(activeState));
+    } catch (NoSuchFieldException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+      log.debug("Returning always-true predicate", e);
+      return new BooleanBuilder();
     }
-    return new BooleanBuilder();
   }
 
   /**

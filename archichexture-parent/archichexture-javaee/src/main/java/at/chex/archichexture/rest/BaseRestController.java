@@ -1,17 +1,13 @@
 package at.chex.archichexture.rest;
 
-import at.chex.archichexture.annotation.AlternativeNames;
-import at.chex.archichexture.annotation.Aspect;
 import at.chex.archichexture.dto.BaseDto;
+import at.chex.archichexture.helpers.Reflection;
 import at.chex.archichexture.model.BaseEntity;
-import at.chex.archichexture.reflect.Reflection;
 import at.chex.archichexture.repository.BaseRepository;
 import at.chex.archichexture.rest.config.RestConfig;
 import at.chex.archichexture.rest.config.RestConfigFactory;
 import java.io.Serializable;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import javax.ws.rs.core.MultivaluedMap;
@@ -56,49 +52,11 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
     }
   }
 
-  /**
-   * Call this to map all values, you need from the {@link DTO} to the {@link ENTITY} and dont forget to save it afterwards!
-   */
-  protected final ENTITY transferAllValuesFromDtoToEntity(DTO dto, ENTITY entity) {
-    log.debug("Comparing entity {} with dto {}", entity, dto);
-    for (Field fieldToSetOnEntity : entity.getClass().getDeclaredFields()) {
-      if (fieldToSetOnEntity.isAnnotationPresent(Aspect.class)) {
-        Aspect aspect = fieldToSetOnEntity.getAnnotation(Aspect.class);
-        log.debug("Processing aspect for Field:{}", fieldToSetOnEntity);
-        if (aspect.modifieable()) {
-          List<String> filterNames = new ArrayList<>();
-          filterNames.add(fieldToSetOnEntity.getName());
-          if (fieldToSetOnEntity.isAnnotationPresent(AlternativeNames.class)) {
-            AlternativeNames alternativeNames = fieldToSetOnEntity
-                .getAnnotation(AlternativeNames.class);
-            filterNames.addAll(Arrays.asList(alternativeNames.value()));
-          }
-
-          Field valueFieldFromFormObject = Reflection
-              .getFieldFromClassInStringList(dto.getClass(), filterNames);
-
-          if (null != valueFieldFromFormObject) {
-            Object object = null;
-            try {
-              valueFieldFromFormObject.setAccessible(true);
-              object = valueFieldFromFormObject.get(dto);
-              fieldToSetOnEntity.setAccessible(true);
-              fieldToSetOnEntity.set(entity, object);
-            } catch (IllegalAccessException e) {
-              log.error("Unable to set Field <{}> with dataType {} to value {}", fieldToSetOnEntity,
-                  fieldToSetOnEntity.getType(), object, e.getLocalizedMessage());
-            }
-          }
-        }
-      }
-    }
-    return updateAdditionalParameters(dto, entity);
-  }
-
   private ENTITY updateOrCreateEntityFromParameters(
       DTO formObject, ENTITY entity) throws IllegalArgumentException {
+    ENTITY entityWithValues = Reflection.transferValuesFromLeftToRight(formObject, entity);
 
-    return getEntityRepository().save(transferAllValuesFromDtoToEntity(formObject, entity));
+    return getEntityRepository().save(updateAdditionalParameters(formObject, entityWithValues));
   }
 
   /**

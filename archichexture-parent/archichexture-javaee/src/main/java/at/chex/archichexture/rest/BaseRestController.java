@@ -41,14 +41,6 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
   }
 
   /**
-   * Do whatever checks you like here BEFORE this {@link ENTITY} is manipulated. This will be
-   * executed before anything is changed.
-   */
-  protected boolean isCanManipulateEntity(ENTITY entity) {
-    return true;
-  }
-
-  /**
    * Execute PUT
    */
   protected Response internalExecutePUTRequest(DTO formParam) {
@@ -65,11 +57,10 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
   }
 
   /**
-   * Map all values, you need from the {@link DTO} to the {@link ENTITY} and save it afterwards!
+   * Call this to map all values, you need from the {@link DTO} to the {@link ENTITY} and dont forget to save it afterwards!
    */
-  private ENTITY updateOrCreateEntityFromParameters(
-      DTO formObject, ENTITY entity) throws IllegalArgumentException {
-    log.debug("Comparing entity {} with dto {}", entity, formObject);
+  protected final ENTITY transferAllValuesFromDtoToEntity(DTO dto, ENTITY entity) {
+    log.debug("Comparing entity {} with dto {}", entity, dto);
     for (Field fieldToSetOnEntity : entity.getClass().getDeclaredFields()) {
       if (fieldToSetOnEntity.isAnnotationPresent(Aspect.class)) {
         Aspect aspect = fieldToSetOnEntity.getAnnotation(Aspect.class);
@@ -84,13 +75,13 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
           }
 
           Field valueFieldFromFormObject = Reflection
-              .getFieldFromClassInStringList(formObject.getClass(), filterNames);
+              .getFieldFromClassInStringList(dto.getClass(), filterNames);
 
           if (null != valueFieldFromFormObject) {
             Object object = null;
             try {
               valueFieldFromFormObject.setAccessible(true);
-              object = valueFieldFromFormObject.get(formObject);
+              object = valueFieldFromFormObject.get(dto);
               fieldToSetOnEntity.setAccessible(true);
               fieldToSetOnEntity.set(entity, object);
             } catch (IllegalAccessException e) {
@@ -101,7 +92,13 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
         }
       }
     }
-    return getEntityRepository().save(updateAdditionalParameters(formObject, entity));
+    return updateAdditionalParameters(dto, entity);
+  }
+
+  private ENTITY updateOrCreateEntityFromParameters(
+      DTO formObject, ENTITY entity) throws IllegalArgumentException {
+
+    return getEntityRepository().save(transferAllValuesFromDtoToEntity(formObject, entity));
   }
 
   /**

@@ -107,7 +107,7 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
   /**
    * Values are directly updated from the {@link DTO} to the {@link ENTITY}, but if you need something additional (e.g. unwrap given ids to value objects in the {@link ENTITY}), this is the place for it.
    */
-  protected ENTITY updateAdditionalParameters(DTO formObject, ENTITY entity) {
+  protected ENTITY updateAdditionalParameters(DTO dto, ENTITY entity) {
     return entity;
   }
 

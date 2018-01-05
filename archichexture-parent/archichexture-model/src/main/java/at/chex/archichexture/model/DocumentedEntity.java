@@ -61,11 +61,4 @@ public class DocumentedEntity extends TitledEntity {
   public void setActive(Boolean active) {
     this.active = active;
   }
-
-  /**
-   * Override this and return true to prevent deleting, but deactivate instead
-   */
-  public boolean isDeletedByDeactivation() {
-    return false;
-  }
 }

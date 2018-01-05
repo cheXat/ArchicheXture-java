@@ -2,6 +2,7 @@ package at.chex.archichexture.repository.impl;
 
 import at.chex.archichexture.annotation.AlternativeNames;
 import at.chex.archichexture.annotation.Aspect;
+import at.chex.archichexture.annotation.RemoveOnDelete;
 import at.chex.archichexture.collections.Values;
 import at.chex.archichexture.model.BaseEntity;
 import at.chex.archichexture.model.DocumentedEntity;
@@ -566,8 +567,8 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
       return false;
     }
 
-    if (entity instanceof DocumentedEntity && ((DocumentedEntity) entity)
-        .isDeletedByDeactivation()) {
+    if (entity instanceof DocumentedEntity && entity.getClass()
+        .isAnnotationPresent(RemoveOnDelete.class)) {
       Boolean visibleBefore = ((DocumentedEntity) entity).getActive();
       visibleBefore = null == visibleBefore ? true : visibleBefore;
       ((DocumentedEntity) entity).setActive(false);

@@ -2,6 +2,7 @@ package at.chex.archichexture.example.model;
 
 import at.chex.archichexture.annotation.AlternativeNames;
 import at.chex.archichexture.annotation.Aspect;
+import at.chex.archichexture.annotation.RemoveOnDelete;
 import at.chex.archichexture.model.DocumentedEntity;
 import com.google.common.base.MoreObjects;
 import javax.persistence.Column;
@@ -15,6 +16,7 @@ import javax.persistence.Table;
  */
 @Entity
 @Table(name = "examples")
+@RemoveOnDelete
 public class Example extends DocumentedEntity {
 
   @Aspect(filterable = true, strict = true)

@@ -567,7 +567,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
       return false;
     }
 
-    if (entity instanceof DocumentedEntity && entity.getClass()
+    if (entity instanceof DocumentedEntity && !entity.getClass()
         .isAnnotationPresent(RemoveOnDelete.class)) {
       Boolean visibleBefore = ((DocumentedEntity) entity).getActive();
       visibleBefore = null == visibleBefore ? true : visibleBefore;
@@ -579,8 +579,14 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
       return visibleBefore;
     }
     if (!getEntityManager().contains(entity)) {
-      log.debug("Tried to delete entity {}, but it was not contained in the entitymanager");
-      return false;
+      ENTITY foundEntity = findEntityById(entity.getId());
+      if (null == foundEntity) {
+        log.debug("Tried to delete entity {}, but it was not contained in the entitymanager");
+        return false;
+      } else {
+        getEntityManager().remove(foundEntity);
+        return true;
+      }
     }
     getEntityManager().remove(entity);
     return true;

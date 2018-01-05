@@ -16,6 +16,9 @@ import javax.persistence.Table;
  */
 @Entity
 @Table(name = "examples")
+/**
+ * The {@link at.chex.archichexture.annotation.RemoveOnDelete} Annotation defines, if this {@link Entity} is deactivated (default, when subclassing {@link DocumentedEntity}) or deleted (Annotation present)
+ */
 @RemoveOnDelete
 public class Example extends DocumentedEntity {
 

@@ -6,6 +6,7 @@ import at.chex.archichexture.collections.Values;
 import at.chex.archichexture.model.BaseEntity;
 import at.chex.archichexture.model.DocumentedEntity;
 import at.chex.archichexture.model.QBaseEntity;
+import at.chex.archichexture.model.QDocumentedEntity;
 import at.chex.archichexture.reflect.Reflection;
 import at.chex.archichexture.repository.BaseRepository;
 import com.google.common.base.Strings;
@@ -122,7 +123,11 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
    * the argument). Make sure to also override {@link #isActiveEntity(BaseEntity)} when overriding
    * this.
    */
-  protected Predicate getActivePredicate(boolean activeState) {
+  private Predicate getActivePredicate(boolean activeState) {
+    EntityPathBase<ENTITY> entityPath = getEntityPath();
+    if (entityPath instanceof QDocumentedEntity) {
+      return ((QDocumentedEntity) entityPath).active.eq(true);
+    }
     return new BooleanBuilder();
   }
 
@@ -132,7 +137,10 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
    * {@link #getActivePredicate(boolean)}. Make sure to also override {@link
    * #getActivePredicate(boolean)} when overriding this.
    */
-  protected boolean isActiveEntity(ENTITY entity) {
+  private boolean isActiveEntity(ENTITY entity) {
+    if (entity instanceof DocumentedEntity) {
+      return ((DocumentedEntity) entity).getActive();
+    }
     return true;
   }
 
@@ -515,7 +523,8 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
       return returnEntity;
     }
 
-    JPAQuery query = createQuery().from(entityPath).where(((QBaseEntity) entityPath).id.eq(id))
+    JPAQuery query = createQuery().from(entityPath)
+        .where(((QBaseEntity) entityPath).id.eq(id))
         .where(getActivePredicate(true));
 
     if (getPermanentQueryAttributes().size() > 0) {

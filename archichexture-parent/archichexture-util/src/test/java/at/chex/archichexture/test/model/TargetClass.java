@@ -1,5 +1,6 @@
 package at.chex.archichexture.test.model;
 
+import at.chex.archichexture.annotation.AlternativeNames;
 import at.chex.archichexture.annotation.Aspect;
 
 /**
@@ -10,6 +11,7 @@ import at.chex.archichexture.annotation.Aspect;
 public class TargetClass {
 
   @Aspect
+  @AlternativeNames("privateInt")
   public int publicInt;
   @Aspect
   public String publicString;

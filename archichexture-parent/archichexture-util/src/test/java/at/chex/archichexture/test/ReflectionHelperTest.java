@@ -1,6 +1,7 @@
 package at.chex.archichexture.test;
 
 import at.chex.archichexture.helpers.Reflection;
+import at.chex.archichexture.test.model.ComplexClass;
 import at.chex.archichexture.test.model.SimpleClass;
 import at.chex.archichexture.test.model.TargetClass;
 import org.junit.Assert;
@@ -38,5 +39,18 @@ public class ReflectionHelperTest {
     Assert.assertEquals("Int is Aspect -> copy", sc.publicInt, tc.publicInt);
     Assert.assertEquals("String is Aspect -> copy", sc.publicString, tc.publicString);
     Assert.assertNotEquals("Long is no Aspect -> do not copy", sc.publicLong, tc.publicLong);
+  }
+
+  @Test
+  public void privateAbstractFieldCopyTest() {
+    ComplexClass cc = new ComplexClass();
+    Assert.assertNotNull(cc);
+    TargetClass tc = new TargetClass();
+    Assert.assertNotNull(tc);
+
+    Reflection.transferValuesFromLeftToRight(cc, tc);
+
+    Assert.assertEquals("Int is Aspect with AlternativeNames -> copy", ComplexClass.INT_VALUE,
+        tc.publicInt);
   }
 }

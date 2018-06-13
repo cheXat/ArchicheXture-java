@@ -3,7 +3,7 @@ package at.chex.archichexture.test.repository.impl;
 import at.chex.archichexture.repository.impl.AbstractBaseRepository;
 import at.chex.archichexture.test.model.TestEntity;
 import at.chex.archichexture.test.repository.TestRepository;
-import com.mysema.query.types.path.EntityPathBase;
+import com.querydsl.core.types.dsl.EntityPathBase;
 import javax.inject.Named;
 import javax.persistence.EntityManager;
 

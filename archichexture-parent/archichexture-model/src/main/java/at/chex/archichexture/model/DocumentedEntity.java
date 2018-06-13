@@ -1,9 +1,13 @@
 package at.chex.archichexture.model;
 
 import at.chex.archichexture.annotation.Aspect;
+import at.chex.archichexture.annotation.Exposed;
+import at.chex.archichexture.annotation.Exposed.ExposureType;
 import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
@@ -19,16 +23,33 @@ public class DocumentedEntity extends TitledEntity {
 
   @Column(name = "created_at")
   @Temporal(TemporalType.TIMESTAMP)
+  @Exposed(exposure = ExposureType.HIDDEN)
   private Date createdAt = new Date();
   @Column(name = "updated_at")
   @Temporal(TemporalType.TIMESTAMP)
+  @Exposed(exposure = ExposureType.HIDDEN)
   private Date updatedAt = new Date();
   @Column(name = "deleted_at")
   @Temporal(TemporalType.TIMESTAMP)
+  @Exposed(exposure = ExposureType.HIDDEN)
   private Date deletedAt = null;
   @Aspect
   @Column(name = FIELD_NAME_ACTIVE)
+  @Exposed(exposure = ExposureType.HIDDEN)
   private Boolean active = true;
+
+  @PrePersist
+  protected void onCreate() {
+    this.createdAt = new Date();
+  }
+
+  @PreUpdate
+  protected void onUpdate() {
+    this.updatedAt = new Date();
+    if (null == this.active) {
+      this.active = true;
+    }
+  }
 
   public Date getCreatedAt() {
     return createdAt;

@@ -1,6 +1,5 @@
 package at.chex.archichexture.example.ctrl;
 
-import at.chex.archichexture.example.dto.ExampleDto;
 import at.chex.archichexture.example.model.Example;
 import at.chex.archichexture.example.repository.ExampleRepository;
 import at.chex.archichexture.repository.BaseRepository;
@@ -22,7 +21,7 @@ import javax.ws.rs.Path;
  * @since 03.01.18
  */
 @Path("/read-example")
-public class ReadonlyExampleController extends TokenBaseRestController<Example, ExampleDto> {
+public class ReadonlyExampleController extends TokenBaseRestController<Example> {
 
   @Inject
   private ExampleRepository exampleRepository;
@@ -30,10 +29,5 @@ public class ReadonlyExampleController extends TokenBaseRestController<Example, 
   @Override
   protected BaseRepository<Example> getEntityRepository() {
     return exampleRepository;
-  }
-
-  @Override
-  protected ExampleDto transformToDto(Example entity) {
-    return new ExampleDto(entity);
   }
 }

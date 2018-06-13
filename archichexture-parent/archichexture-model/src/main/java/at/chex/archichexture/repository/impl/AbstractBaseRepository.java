@@ -11,12 +11,12 @@ import at.chex.archichexture.model.QBaseEntity;
 import at.chex.archichexture.repository.BaseRepository;
 import com.google.common.base.Strings;
 import com.google.common.reflect.TypeToken;
-import com.mysema.query.BooleanBuilder;
-import com.mysema.query.jpa.JPASubQuery;
-import com.mysema.query.jpa.impl.JPAQuery;
-import com.mysema.query.types.OrderSpecifier;
-import com.mysema.query.types.Predicate;
-import com.mysema.query.types.path.EntityPathBase;
+import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.Predicate;
+import com.querydsl.core.types.dsl.EntityPathBase;
+import com.querydsl.jpa.impl.JPAQuery;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -69,13 +69,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
    * Additional stuff
    */
   private Map<String, List<String>> permanentQueryAttributes = new HashMap<>();
-
-  /**
-   * Create a new {@link JPASubQuery}
-   */
-  protected JPASubQuery createSubQuery() {
-    return new JPASubQuery();
-  }
+  private JPAQueryFactory queryFactory;
 
   /**
    * Get all entities of the given type {@link ENTITY}. Use this for small tables like
@@ -85,15 +79,23 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
    * @return all existing entities
    */
   public List<ENTITY> findAll() {
-    return createQuery().from(getEntityPath()).where(getActivePredicate(true))
-        .list(getEntityPath());
+    return query().selectFrom(getEntityPath()).where(getActivePredicate(true)).fetch();
   }
 
   /**
    * Create a new {@link JPAQuery} using the given {@link EntityManager}
    */
+  @SuppressWarnings("WeakerAccess")
   protected JPAQuery createQuery() {
-    return new JPAQuery(getEntityManager());
+    return queryFactory.query();
+  }
+
+  /**
+   * Create a new {@link JPAQuery} using the given {@link EntityManager}
+   */
+  @SuppressWarnings("WeakerAccess")
+  protected JPAQueryFactory query() {
+    return queryFactory;
   }
 
   /**
@@ -156,13 +158,12 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
       log.error("EntityManager was not initialized correctly at {}!",
           this.getClass().getCanonicalName());
     }
-    if (null == this.getEntityClass()) {
-      log.error("EntityClass was not initialized correctly at {}!",
-          this.getClass().getCanonicalName());
-    }
     if (null == this.getEntityPath()) {
       log.error("EntityPath was not initialized correctly at {}!",
           this.getClass().getCanonicalName());
+    }
+    if (null == queryFactory) {
+      queryFactory = new JPAQueryFactory(this::getEntityManager);
     }
   }
 
@@ -194,12 +195,12 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
    *
    * Add just those, that can't be determined automatically (e.g. you have a field 'date' and you want to implement date_from and date_to)
    */
+  @SuppressWarnings("WeakerAccess")
   protected Collection<Predicate> getPredicateForQueryArgumentsMap(
       Map<String, List<String>> arguments) {
     ArrayList<Predicate> list = new ArrayList<>();
-    /**
-     * Debug logging
-     */
+
+    // Debug logging
     if (log.isDebugEnabled()) {
       String joined = "";
       boolean first = true;
@@ -212,16 +213,14 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
       }
       log.debug("Requested Predicates for Arguments: {}", joined);
     }
-    /**
-     * "Active" Attribute in- or exclusion
-     */
+
+    //"Active" Attribute in- or exclusion
     if (arguments.containsKey(ARGUMENT_IGNORE_ACTIVE)) {
       List<String> activeArgumentList = arguments
           .getOrDefault(ARGUMENT_IGNORE_ACTIVE, Collections.singletonList("false"));
       if (null == activeArgumentList || activeArgumentList.size() < 1) {
-        /**
-         * Defaulting, if none set
-         */
+
+        // Defaulting, if none set
         list.add(getActivePredicate(true));
       } else {
         String s = activeArgumentList.get(0);
@@ -439,6 +438,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
   /**
    * Override this if you always want all values (no limits)
    */
+  @SuppressWarnings("WeakerAccess")
   protected boolean canBeLimited() {
     return true;
   }
@@ -447,14 +447,13 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
    * This is your main select method. Put all your arguments, limit and offset parameters here
    */
   @Override
+  @SuppressWarnings("unchecked")
   public List<ENTITY> list(Map<String, List<String>> arguments, int limit,
       int offset) {
-    JPAQuery query = createQuery().from(getEntityPath()).where(getActivePredicate(true));
+    JPAQuery query = query().selectFrom(getEntityPath()).where(getActivePredicate(true));
     Map<String, List<String>> queryAttributes = new HashMap<>(
         getPermanentQueryAttributes());
-    /**
-     * Merge those 2 Maps carrying the arguments for the query
-     */
+    // Merge those 2 Maps carrying the arguments for the query
     if (null != arguments) {
       for (Entry<String, List<String>> entry : arguments.entrySet()) {
         if (!queryAttributes.containsKey(entry.getKey())) {
@@ -465,30 +464,24 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
     }
 
     if (queryAttributes.size() > 0) {
-      /**
-       * Add all query parameters
-       */
+      // Add all query parameters
       query.where(getPredicateForQueryArgumentsMap(queryAttributes).toArray(new Predicate[0]));
     }
-    /**
-     * Prepare and add all sort parameters
-     */
+    // Prepare and add all sort parameters
     OrderSpecifier<?> sortParameter = getSortParameter(queryAttributes);
     if (null != sortParameter) {
       log.debug("ordering by parameter {}", sortParameter);
       query.orderBy(sortParameter);
     }
-    /**
-     * Limit and offset go together
-     */
+
+    // Limit and offset go together
     if (canBeLimited() && limit > 0) {
       query.limit(limit).offset(offset);
     }
-    /**
-     * Execute the query
-     */
+
+    // Execute the query
     List<ENTITY> returnList = new ArrayList<>(addAdditionalQueryAttributes(
-        query).list(getEntityPath()));
+        query).fetch());
     if (null != queryAttributes.get(ARGUMENT_ENTITY_ID)) {
       List<ENTITY> idList = new ArrayList<>();
       if (null != arguments) {
@@ -505,11 +498,13 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
   /**
    * Override this to add additional stuff to your query like sort or whatever
    */
+  @SuppressWarnings("WeakerAccess")
   protected JPAQuery addAdditionalQueryAttributes(JPAQuery query) {
     return query;
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public ENTITY findEntityById(Long id) {
     if (null == id) {
       log.debug("findEntityById with NULL id");
@@ -526,7 +521,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
       return returnEntity;
     }
 
-    JPAQuery query = createQuery().from(entityPath)
+    JPAQuery query = query().selectFrom(entityPath)
         .where(((QBaseEntity) entityPath).id.eq(id))
         .where(getActivePredicate(true));
 
@@ -535,8 +530,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
           .toArray(new Predicate[0]));
     }
 
-    ENTITY returnEntity = query
-        .singleResult(entityPath);
+    ENTITY returnEntity = (ENTITY) query.fetchOne();
     log.debug("Returning entity {}", returnEntity);
 
     return returnEntity;
@@ -601,7 +595,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
       return null;
     }
 
-    if (entity instanceof DocumentedEntity) {
+    /*if (entity instanceof DocumentedEntity) {
       if (null == ((DocumentedEntity) entity).getCreatedAt()) {
         ((DocumentedEntity) entity).setCreatedAt(new Date());
       }
@@ -609,7 +603,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
         ((DocumentedEntity) entity).setActive(true);
       }
       ((DocumentedEntity) entity).setUpdatedAt(new Date());
-    }
+    }*/
 
     log.trace("Save called for entity {}", entity);
     EntityManager entityManager = getEntityManager();

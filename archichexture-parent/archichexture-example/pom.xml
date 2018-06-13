@@ -5,7 +5,7 @@
   <parent>
     <artifactId>archichexture-parent</artifactId>
     <groupId>at.chex.archichexture</groupId>
-    <version>2.0-SNAPSHOT</version>
+    <version>2.2-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -23,17 +23,18 @@
     <dependency>
       <groupId>at.chex.archichexture</groupId>
       <artifactId>archichexture-model</artifactId>
-      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>at.chex.archichexture</groupId>
       <artifactId>archichexture-core</artifactId>
-      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>at.chex.archichexture</groupId>
       <artifactId>archichexture-javaee</artifactId>
-      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>at.chex.archichexture</groupId>
+      <artifactId>archichexture-extensions</artifactId>
     </dependency>
 
     <dependency>
@@ -57,16 +58,12 @@
 
     <!-- Entities Framework -->
     <dependency>
-      <groupId>com.mysema.querydsl</groupId>
+      <groupId>com.querydsl</groupId>
       <artifactId>querydsl-jpa</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.mysema.querydsl</groupId>
+      <groupId>com.querydsl</groupId>
       <artifactId>querydsl-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.mysema.querydsl</groupId>
-      <artifactId>querydsl-apt</artifactId>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
@@ -99,57 +96,18 @@
       </plugin>
       <plugin>
         <artifactId>maven-war-plugin</artifactId>
-        <configuration>
-          <webResources>
-            <resource>
-              <directory>src/main/webapp</directory>
-            </resource>
-          </webResources>
-          <warSourceDirectory>src/main/webapp</warSourceDirectory>
-          <failOnMissingWebXml>false</failOnMissingWebXml>
-        </configuration>
       </plugin>
       <plugin>
         <groupId>org.wildfly.plugins</groupId>
         <artifactId>wildfly-maven-plugin</artifactId>
-        <configuration>
-          <skip>false</skip>
-        </configuration>
       </plugin>
       <plugin>
         <groupId>com.mysema.maven</groupId>
-        <artifactId>maven-apt-plugin</artifactId>
-        <version>1.0.2</version>
-        <executions>
-          <execution>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>process</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>src/main/generated</outputDirectory>
-              <processor>com.mysema.query.apt.jpa.JPAAnnotationProcessor</processor>
-            </configuration>
-          </execution>
-        </executions>
+        <artifactId>apt-maven-plugin</artifactId>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>add-source</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>add-source</goal>
-            </goals>
-            <configuration>
-              <sources>
-                <source>src/main/generated</source>
-              </sources>
-            </configuration>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
   </build>

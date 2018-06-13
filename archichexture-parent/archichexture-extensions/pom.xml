@@ -2,25 +2,51 @@
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns="http://maven.apache.org/POM/4.0.0"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
   <parent>
     <artifactId>archichexture-parent</artifactId>
     <groupId>at.chex.archichexture</groupId>
     <version>2.2-SNAPSHOT</version>
   </parent>
-  <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>archichexture-model</artifactId>
-  <packaging>jar</packaging>
+  <!-- ================================================================ -->
+  <!--                     ArchicheXture Extensions                     -->
+  <!-- This module provides many common functions to ArchicheXture.     -->
+  <!-- Find usages of the provided convenience methods in the example   -->
+  <!-- project.                                                         -->
+  <!-- All  -->
+  <!-- ================================================================ -->
+
+  <artifactId>archichexture-extensions</artifactId>
 
   <dependencies>
     <dependency>
       <groupId>at.chex.archichexture</groupId>
+      <artifactId>archichexture-model</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>at.chex.archichexture</groupId>
+      <artifactId>archichexture-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>at.chex.archichexture</groupId>
+      <artifactId>archichexture-javaee</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>at.chex.archichexture</groupId>
       <artifactId>archichexture-util</artifactId>
     </dependency>
+
     <!-- 3rd Party/JEE libraries -->
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
+    </dependency>
+
+    <!-- J2EE Libraries -->
+    <dependency>
+      <groupId>javax.ws.rs</groupId>
+      <artifactId>javax.ws.rs-api</artifactId>
     </dependency>
 
     <!-- Persistence/JPA libraries -->
@@ -28,13 +54,6 @@
       <groupId>javax.persistence</groupId>
       <artifactId>javax.persistence-api</artifactId>
     </dependency>
-    <!-- This is needed in the queryDsl class generator -->
-    <!--dependency>
-      <groupId>org.eclipse.persistence</groupId>
-      <artifactId>javax.persistence</artifactId>
-      <version>2.0.0</version>
-      <scope>provided</scope>
-    </dependency-->
     <dependency>
       <groupId>com.querydsl</groupId>
       <artifactId>querydsl-jpa</artifactId>
@@ -43,33 +62,8 @@
       <groupId>com.querydsl</groupId>
       <artifactId>querydsl-core</artifactId>
     </dependency>
-    <!-- Probably not needed anymore. remove -->
-    <dependency>
-      <groupId>com.querydsl</groupId>
-      <artifactId>querydsl-apt</artifactId>
-    </dependency>
-    <!-- TEST -->
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.h2database</groupId>
-      <artifactId>h2</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.hibernate</groupId>
-      <artifactId>hibernate-entitymanager</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jglue.cdi-unit</groupId>
-      <artifactId>cdi-unit</artifactId>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
+
   <build>
     <plugins>
       <plugin>

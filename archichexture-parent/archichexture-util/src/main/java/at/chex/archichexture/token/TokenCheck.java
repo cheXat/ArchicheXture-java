@@ -1,4 +1,4 @@
-package at.chex.archichexture.rest.token;
+package at.chex.archichexture.token;
 
 /**
  * This provides an interface, that is used to check the validity of an incoming token.

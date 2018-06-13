@@ -1,15 +1,20 @@
 package at.chex.archichexture.rest;
 
-import at.chex.archichexture.dto.BaseDto;
+import at.chex.archichexture.annotation.Exposed;
 import at.chex.archichexture.helpers.Reflection;
 import at.chex.archichexture.model.BaseEntity;
 import at.chex.archichexture.repository.BaseRepository;
 import at.chex.archichexture.rest.config.RestConfig;
 import at.chex.archichexture.rest.config.RestConfigFactory;
+import com.google.common.base.Strings;
+import com.google.gson.JsonObject;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -25,7 +30,7 @@ import org.slf4j.LoggerFactory;
  * @author Jakob Galbavy {@literal jg@chex.at}
  * @since 27/03/2017
  */
-public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends BaseDto<ENTITY>>
+public abstract class BaseRestController<ENTITY extends BaseEntity>
     implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -39,7 +44,9 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
   /**
    * Execute PUT
    */
-  protected Response internalExecutePUTRequest(DTO formParam) {
+  @SuppressWarnings("WeakerAccess")
+  @Nonnull
+  protected Response internalExecutePUTRequest(@Nonnull ENTITY formParam) {
     log.debug("Create new entity for {}", formParam);
     try {
       ENTITY entity = updateOrCreateEntityFromParameters(formParam, createNewEntity());
@@ -52,23 +59,29 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
     }
   }
 
+  @Nonnull
   private ENTITY updateOrCreateEntityFromParameters(
-      DTO formObject, ENTITY entity) throws IllegalArgumentException {
+      @Nonnull ENTITY formObject, @Nonnull ENTITY entity) throws IllegalArgumentException {
     ENTITY entityWithValues = Reflection.transferValuesFromLeftToRight(formObject, entity);
     log.debug("Entity after transfer is {}", entityWithValues);
     return getEntityRepository().save(updateAdditionalParameters(formObject, entityWithValues));
   }
 
   /**
-   * Values are directly updated from the {@link DTO} to the {@link ENTITY}, but if you need something additional (e.g. unwrap given ids to value objects in the {@link ENTITY}), this is the place for it.
+   * Values are directly updated to the {@link ENTITY}, but if you need something additional (e.g. unwrap given ids to value objects in the {@link ENTITY}), this is the place for it.
    */
-  protected ENTITY updateAdditionalParameters(DTO dto, ENTITY entity) {
+  @SuppressWarnings({"WeakerAccess", "unused"})
+  @Nonnull
+  protected ENTITY updateAdditionalParameters(@Nonnull ENTITY ENTITY,
+      @Nonnull ENTITY entity) {
     return entity;
   }
 
   /**
    * Override this to interfere with entity creation
    */
+  @SuppressWarnings("WeakerAccess")
+  @Nonnull
   protected ENTITY createNewEntity() {
     return getEntityRepository().create();
   }
@@ -82,7 +95,8 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
   /**
    * Execute update of an entity request
    */
-  protected Response internalExecutePOSTRequest(Long id, DTO formParam) {
+  @SuppressWarnings("WeakerAccess")
+  protected Response internalExecutePOSTRequest(Long id, ENTITY formParam) {
     log.debug("Update entity with id {} and formParam {}", id, formParam);
 
     if (!isIdAccepted(id)) {
@@ -109,7 +123,8 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
   /**
    * Override this to add additional checks for the id
    */
-  protected boolean isIdAccepted(Long id) {
+  @SuppressWarnings("WeakerAccess")
+  protected boolean isIdAccepted(@Nullable Long id) {
     return (null != id && id > 0L);
   }
 
@@ -117,11 +132,15 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
    * Override this to interfere in the loading process (e.g. load different entities according to id
    * characteristics)
    */
-  protected ENTITY loadEntityById(Long id) {
+  @SuppressWarnings("WeakerAccess")
+  @Nullable
+  protected ENTITY loadEntityById(@Nullable Long id) {
     return getEntityRepository().findEntityById(id);
   }
 
-  protected Response internalExecuteDELETERequest(Long id) {
+  @SuppressWarnings("WeakerAccess")
+  @Nonnull
+  protected Response internalExecuteDELETERequest(@Nonnull Long id) {
     log.debug("Delete entity with id {}", id);
     ENTITY entity = loadEntityById(id);
     if (this.getEntityRepository().delete(entity)) {
@@ -130,14 +149,12 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
     return Response.status(Response.Status.PRECONDITION_FAILED).build();
   }
 
-  protected Long handleIdBeforeProcessing(Long id) {
-    return id;
-  }
-
   /**
    * Execute the GET Request for the given id/token
    */
-  protected Response internalGETRequest(Long id) {
+  @SuppressWarnings("WeakerAccess")
+  @Nonnull
+  protected Response internalGETRequest(@Nonnull Long id) {
     log.trace("Incoming request for id {}", id);
 
     if (!isIdAccepted(id)) {
@@ -146,13 +163,15 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
     }
 
     ENTITY entity = loadEntityById(id);
-    return Response.ok(null == entity ? null : transformToDto(entity)).build();
+    return Response.ok(null == entity ? null : transformToJsonObject(entity)).build();
   }
 
   /**
    * Process the GET List Request here.
    */
-  protected Response internalGETListRequest(UriInfo info, int limit, int offset) {
+  @SuppressWarnings("WeakerAccess")
+  @Nonnull
+  protected Response internalGETListRequest(@Nonnull UriInfo info, int limit, int offset) {
     log.trace("Incoming LIST request");
 
     MultivaluedMap<String, String> pathParametersMap = info
@@ -168,14 +187,15 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
           pathParametersMap, limit - entityList.size(), offset));
     }
 
-    return Response.ok(postProcessEntitiesCollectionBeforeReturn(transformToDto(entityList)))
+    return Response.ok(postProcessEntitiesCollectionBeforeReturn(transformToJsonObject(entityList)))
         .build();
   }
 
   /**
    * Override this to enforce required parameters
    */
-  protected boolean isRequiredParametersSet(MultivaluedMap<String, String> parametersMap) {
+  @SuppressWarnings({"WeakerAccess", "unused"})
+  protected boolean isRequiredParametersSet(@Nonnull MultivaluedMap<String, String> parametersMap) {
     return true;
   }
 
@@ -183,30 +203,58 @@ public abstract class BaseRestController<ENTITY extends BaseEntity, DTO extends 
    * Here you can add Entities, that should show up with this call, but wouldn't on the generic
    * method.
    */
+  @SuppressWarnings({"WeakerAccess", "unused"})
+  @Nonnull
   protected List<ENTITY> getAdditionalEntitiesForListRequest(
-      MultivaluedMap<String, String> pathParametersMap) {
+      @Nonnull MultivaluedMap<String, String> pathParametersMap) {
     return new ArrayList<ENTITY>();
   }
 
-  protected Collection<DTO> postProcessEntitiesCollectionBeforeReturn(
-      Collection<DTO> entityCollection) {
+  @SuppressWarnings("WeakerAccess")
+  @Nonnull
+  protected Collection<JsonObject> postProcessEntitiesCollectionBeforeReturn(
+      @Nonnull Collection<JsonObject> entityCollection) {
     return entityCollection;
   }
 
-  protected List<DTO> transformToDto(List<ENTITY> entityList) {
-    List<DTO> returnList = new ArrayList<>();
+  @SuppressWarnings("WeakerAccess")
+  @Nonnull
+  protected List<JsonObject> transformToJsonObject(@Nonnull List<ENTITY> entityList) {
+    List<JsonObject> returnList = new ArrayList<>();
     for (ENTITY e : entityList) {
-      DTO entityBaseDto = null == e ? null : transformToDto(e);
-      if (null != entityBaseDto) {
-        returnList.add(entityBaseDto);
+      JsonObject entityBaseJsonObject = null == e ? null : transformToJsonObject(e);
+      if (null != entityBaseJsonObject) {
+        returnList.add(entityBaseJsonObject);
       }
     }
     return returnList;
   }
 
   /**
-   * Transform the given {@link ENTITY} to the corresponding Dto before
+   * Transform the given {@link ENTITY} to the corresponding JsonObject before
    * returning it after the webservice call.
    */
-  protected abstract DTO transformToDto(ENTITY entity);
+  @SuppressWarnings("WeakerAccess")
+  @Nonnull
+  protected JsonObject transformToJsonObject(@Nonnull ENTITY entity) {
+    JsonObject jsonObject = new JsonObject();
+
+    List<Field> annotatedFields = Reflection.getAnnotatedFields(Exposed.class, entity.getClass());
+    for (Field field : annotatedFields) {
+      Exposed annotation = field.getAnnotation(Exposed.class);
+      String key = Strings.isNullOrEmpty(annotation.exposedName()) ? field.getName()
+          : annotation.exposedName();
+      if (!field.isAccessible()) {
+        field.setAccessible(true);
+      }
+      try {
+        Object o = field.get(entity);
+        jsonObject.addProperty(key, String.valueOf(o));
+      } catch (IllegalAccessException e) {
+        log.warn("Unable to access entity field!", e);
+      }
+    }
+
+    return jsonObject;
+  }
 }

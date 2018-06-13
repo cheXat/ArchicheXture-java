@@ -1,9 +1,9 @@
 package at.chex.archichexture.example.repository.impl;
 
-import at.chex.archichexture.example.model.Example;
-import at.chex.archichexture.example.model.QExample;
-import at.chex.archichexture.example.repository.ExampleRepository;
-import at.chex.archichexture.repository.impl.AbstractBaseRepository;
+import at.chex.archichexture.example.model.ExampleUser;
+import at.chex.archichexture.example.model.QExampleUser;
+import at.chex.archichexture.example.repository.ExampleUserRepository;
+import at.chex.archichexture.extension.repository.impl.AbstractUserRepository;
 import com.querydsl.core.types.dsl.EntityPathBase;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -12,19 +12,19 @@ import javax.persistence.PersistenceContext;
 /**
  * @author cheX GmbH Austria {@literal chex@chex.at}
  * @author Jakob Galbavy {@literal jg@chex.at}
- * @since 03.01.18
+ * @since 12.06.18
  */
 @Stateless
-public class StatelessExampleRepository extends AbstractBaseRepository<Example> implements
-    ExampleRepository {
+public class StatelessExampleUserRepository extends AbstractUserRepository<ExampleUser> implements
+    ExampleUserRepository {
 
-  private QExample q = QExample.example;
+  private QExampleUser q = QExampleUser.exampleUser;
 
   @PersistenceContext
   private EntityManager entityManager;
 
   @Override
-  protected EntityPathBase<Example> getEntityPath() {
+  protected EntityPathBase<ExampleUser> getEntityPath() {
     return q;
   }
 

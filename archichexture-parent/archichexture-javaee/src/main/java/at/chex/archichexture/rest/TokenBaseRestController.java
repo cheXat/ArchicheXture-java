@@ -1,14 +1,14 @@
 package at.chex.archichexture.rest;
 
-import at.chex.archichexture.dto.BaseDto;
 import at.chex.archichexture.model.BaseEntity;
-import at.chex.archichexture.rest.token.TokenCheck;
+import at.chex.archichexture.token.TokenCheck;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -25,8 +25,8 @@ import org.slf4j.LoggerFactory;
  * @author Jakob Galbavy {@literal jg@chex.at}
  * @since 27/03/2017
  */
-public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO extends BaseDto<ENTITY>> extends
-    BaseRestController<ENTITY, DTO> {
+public abstract class TokenBaseRestController<ENTITY extends BaseEntity> extends
+    BaseRestController<ENTITY> {
 
   private static final Logger log = LoggerFactory.getLogger(BaseRestController.class);
   private TokenCheck tokenCheck = (token, resetTokenExpiration) -> 0;
@@ -35,6 +35,7 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
   /**
    * Ensure, that one of the init methods is called before handling any requests
    */
+  @SuppressWarnings({"WeakerAccess", "unused"})
   public void init(TokenCheck tokenCheck) {
     this.init(tokenCheck, true);
   }
@@ -42,6 +43,7 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
   /**
    * CAUTION: Ensure, that one of the init methods is called before handling any requests
    */
+  @SuppressWarnings("WeakerAccess")
   public void init(TokenCheck tokenCheck, boolean readonlyController) {
     if (null != tokenCheck) {
       this.tokenCheck = tokenCheck;
@@ -74,6 +76,7 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
    * This returns the correct HTTP:ResponseCode. If 0, this is interpreted as "everything's ok". Any
    * other value will be returned as the HTTP:Result.
    */
+  @SuppressWarnings("WeakerAccess")
   protected int getTokenResponseCode(String token, boolean resetTokenExpiration) {
     log.debug("Checking validity of token:{}", token);
     return tokenCheck.getTokenResponseCode(token, resetTokenExpiration);
@@ -82,6 +85,7 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
   /**
    * Process the GET List Request here.
    */
+  @SuppressWarnings("WeakerAccess")
   protected Response internalGETListRequest(UriInfo info, String token, int limit, int offset) {
     log.trace("Incoming LIST request for token {}", token);
 
@@ -109,25 +113,25 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
   /**
    * Execute the GET Request for the given id/token
    */
+  @SuppressWarnings("WeakerAccess")
   protected Response internalGETRequest(Long id, String token) {
     log.trace("Incoming request for id {} with token {}", id, token);
     return super.internalGETRequest(id);
   }
 
-  @POST
+  @PUT
   @Path("/")
-  @Consumes({"application/x-www-form-urlencoded", MediaType.APPLICATION_JSON})
+  @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Response executePUTRequest(
-      @BeanParam DTO formParam,
+      ENTITY formParam,
       @QueryParam(value = "reset_token") @DefaultValue("true") boolean resetTokenTimes,
       @QueryParam(value = "token") String token) {
-
     if (this.isReadonlyController()) {
       log.warn("Tried to PUT on a readonly controller!");
       return Response.status(Response.Status.BAD_REQUEST).build();
     }
-    log.trace("POST:/ (create) with Parameters. dto:{}, reset_token:{}, token:{}", formParam,
+    log.trace("PUT:/ (create) with Parameters. dto:{}, reset_token:{}, token:{}", formParam,
         resetTokenTimes, token);
 
     int tokenStatusResponseCode = getTokenResponseCode(token, resetTokenTimes);
@@ -140,11 +144,11 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
 
   @POST
   @Path("/{id}")
-  @Consumes({"application/x-www-form-urlencoded", MediaType.APPLICATION_JSON})
+  @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Response executePOSTRequest(
       @PathParam("id") Long id,
-      @BeanParam DTO formParam,
+      @BeanParam ENTITY formParam,
       @QueryParam(value = "reset_token") @DefaultValue("true") boolean resetTokenTimes,
       @QueryParam(value = "token") String token) {
 
@@ -166,11 +170,13 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
   /**
    * Process the update-entity event
    */
-  protected Response internalExecutePOSTRequest(Long id, String token, DTO formParam) {
+  @SuppressWarnings("WeakerAccess")
+  protected Response internalExecutePOSTRequest(Long id, String token, ENTITY formParam) {
     log.debug("Update entity with id {} for token {}. FormParams: {}", id, token, formParam);
     return super.internalExecutePOSTRequest(id, formParam);
   }
 
+  @SuppressWarnings("WeakerAccess")
   protected boolean isReadonlyController() {
     return this.readonlyController;
   }
@@ -199,6 +205,7 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity, DTO ext
   /**
    * Delete the entity with the given id
    */
+  @SuppressWarnings("WeakerAccess")
   protected Response internalExecuteDELETERequest(Long id, String token, boolean resetTokenTimes) {
     if (this.readonlyController) {
       return Response.status(Response.Status.BAD_REQUEST).build();

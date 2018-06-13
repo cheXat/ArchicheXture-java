@@ -2,6 +2,8 @@ package at.chex.archichexture.example.model;
 
 import at.chex.archichexture.annotation.AlternativeNames;
 import at.chex.archichexture.annotation.Aspect;
+import at.chex.archichexture.annotation.Exposed;
+import at.chex.archichexture.annotation.Exposed.ExposureType;
 import at.chex.archichexture.annotation.RemoveOnDelete;
 import at.chex.archichexture.model.DocumentedEntity;
 import javax.persistence.Column;
@@ -24,12 +26,19 @@ public class Example extends DateExample {
   @Aspect(filterable = true, strict = true)
   @AlternativeNames({"what", "ever"})
   @Column(name = "whatever")
+  @Exposed(exposedName = "ever_what")
   private String whatever;
 
   @Aspect
   @AlternativeNames({"bla", "blubber"})
   @Column(name = "blub")
+  @Exposed
   private String blub;
+
+  @Aspect
+  @Column(name = "hidden_field")
+  @Exposed(exposure = ExposureType.HIDDEN)
+  private String hiddenField;
 
   public String getWhatever() {
     return whatever;

@@ -1,6 +1,8 @@
 package at.chex.archichexture.model;
 
 import at.chex.archichexture.annotation.Aspect;
+import at.chex.archichexture.annotation.Exposed;
+import at.chex.archichexture.annotation.Exposed.ExposureType;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import java.io.Serializable;
@@ -32,6 +34,7 @@ public abstract class BaseEntity implements Serializable {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @XmlElement(name = FIELD_NAME_ID)
+  @Exposed(exposure = ExposureType.PUBLIC)
   private Long id;
 
   /**

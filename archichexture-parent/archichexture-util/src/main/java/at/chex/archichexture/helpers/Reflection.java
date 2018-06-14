@@ -1,7 +1,11 @@
 package at.chex.archichexture.helpers;
 
+import at.chex.archichexture.HasId;
 import at.chex.archichexture.annotation.AlternativeNames;
 import at.chex.archichexture.annotation.Aspect;
+import at.chex.archichexture.annotation.Exposed;
+import at.chex.archichexture.annotation.Exposed.Exposure;
+import at.chex.archichexture.annotation.Exposed.Visibility;
 import com.google.common.base.Strings;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -198,5 +202,71 @@ public class Reflection {
       }
     }
     return null;
+  }
+
+  @SuppressWarnings("WeakerAccess")
+  public static <TYPE> JsonObject transferValuesToJson(TYPE left, JsonObject jsonObject) {
+    Class<?> classToWorkWith = left.getClass();
+    // loop through the class hierarchy
+    do {
+      // loop through all fields on the target class
+      for (Field fieldToSetOnEntity : classToWorkWith.getDeclaredFields()) {
+
+        // check for @Aspect annotations
+        if (fieldToSetOnEntity.isAnnotationPresent(Aspect.class)) {
+          if (!fieldToSetOnEntity.isAnnotationPresent(Exposed.class) || fieldToSetOnEntity
+              .getAnnotation(Exposed.class).exposure().equals(Visibility.PUBLIC)) {
+            String keyName = fieldToSetOnEntity.getName();
+            boolean exportIfEmpty = false;
+            Exposure exposure = Exposure.OBJECT;
+            if (fieldToSetOnEntity.isAnnotationPresent(Exposed.class)) {
+              Exposed annotation = fieldToSetOnEntity.getAnnotation(Exposed.class);
+              if (!Strings.isNullOrEmpty(annotation.exposedName())) {
+                keyName = annotation.exposedName();
+              }
+              exportIfEmpty = annotation.exposeIfEmpty();
+              exposure = annotation.exposeAs();
+            }
+
+            try {
+              fieldToSetOnEntity.setAccessible(true);
+              Object object = fieldToSetOnEntity.get(left);
+              if (null != object) {
+                if (object instanceof HasId) { // if this is an object, we can actually handle. All ArchicheXture Entities inherit HasId anyway
+                  if (exposure.equals(Exposure.ID)) {
+                    jsonObject.addProperty(keyName, ((HasId) object).getId());
+                  } else {
+                    jsonObject.add(keyName,
+                        transferValuesToJson(fieldToSetOnEntity.getType().cast(object),
+                            new JsonObject()));
+                  }
+                } else {
+                  if (object instanceof Number) {
+                    jsonObject.addProperty(keyName, (Number) object);
+                  } else if (object instanceof Boolean) {
+                    jsonObject.addProperty(keyName, (Boolean) object);
+                  } else if (object instanceof Character) {
+                    jsonObject.addProperty(keyName, (Character) object);
+                  } else {
+                    // try string if unknown
+                    String stringValue = String.valueOf(object);
+                    if (!Strings.isNullOrEmpty(stringValue)) {
+                      jsonObject.addProperty(keyName, stringValue);
+                    } else if (exportIfEmpty) {
+                      jsonObject.addProperty(keyName, "");
+                    }
+                  }
+                }
+              } else if (exportIfEmpty) {
+                jsonObject.add(keyName, null);
+              }
+            } catch (IllegalAccessException e) {
+              // do nothing
+            }
+          }
+        }
+      }
+    } while (null != (classToWorkWith = classToWorkWith.getSuperclass()));
+    return jsonObject;
   }
 }

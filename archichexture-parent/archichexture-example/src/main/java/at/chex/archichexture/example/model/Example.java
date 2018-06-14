@@ -3,7 +3,7 @@ package at.chex.archichexture.example.model;
 import at.chex.archichexture.annotation.AlternativeNames;
 import at.chex.archichexture.annotation.Aspect;
 import at.chex.archichexture.annotation.Exposed;
-import at.chex.archichexture.annotation.Exposed.ExposureType;
+import at.chex.archichexture.annotation.Exposed.Visibility;
 import at.chex.archichexture.annotation.RemoveOnDelete;
 import at.chex.archichexture.model.DocumentedEntity;
 import javax.persistence.Column;
@@ -37,7 +37,7 @@ public class Example extends DateExample {
 
   @Aspect
   @Column(name = "hidden_field")
-  @Exposed(exposure = ExposureType.HIDDEN)
+  @Exposed(exposure = Visibility.HIDDEN)
   private String hiddenField;
 
   public String getWhatever() {

@@ -2,7 +2,7 @@ package at.chex.archichexture.model;
 
 import at.chex.archichexture.annotation.Aspect;
 import at.chex.archichexture.annotation.Exposed;
-import at.chex.archichexture.annotation.Exposed.ExposureType;
+import at.chex.archichexture.annotation.Exposed.Visibility;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import javax.persistence.Column;
@@ -24,7 +24,7 @@ public abstract class TitledEntity extends BaseEntity {
    */
   @Aspect
   @Column(name = FIELD_NAME_TITLE)
-  @Exposed(exposure = ExposureType.PUBLIC)
+  @Exposed(exposure = Visibility.PUBLIC)
   private String title;
 
   /**

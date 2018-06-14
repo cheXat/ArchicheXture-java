@@ -6,7 +6,6 @@ import at.chex.archichexture.extension.rest.AbstractUserController;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.ws.rs.Path;
-import javax.ws.rs.core.Response.Status;
 
 /**
  * This is a fully functional REST Controller for the {@link ExampleUser} class.
@@ -36,8 +35,8 @@ public class ExampleUserController extends AbstractUserController<ExampleUser> {
   @PostConstruct
   public void init() {
     super.init(
-        (token, resetTokenExpiration) -> null != exampleUserRepository.findUserByToken(token) ? 0
-            : Status.FORBIDDEN.getStatusCode(),
+        // if there is a User with the given token, that's enough for us to let him through
+        (token, resetTokenExpiration) -> null != exampleUserRepository.findUserByToken(token),
         // set this to false to get a read/write controller. true is readonly (default)
         false);
   }

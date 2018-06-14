@@ -30,7 +30,7 @@ public class ReadWriteExampleController extends TokenBaseRestController<Example>
    */
   @PostConstruct
   public void init() {
-    super.init((token, resetTokenExpiration) -> 0, false);
+    super.init((token, resetTokenExpiration) -> true, false);
   }
 
   @Override

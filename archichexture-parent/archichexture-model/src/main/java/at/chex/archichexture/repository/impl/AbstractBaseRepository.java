@@ -78,6 +78,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
    *
    * @return all existing entities
    */
+  @SuppressWarnings("unused")
   public List<ENTITY> findAll() {
     return query().selectFrom(getEntityPath()).where(getActivePredicate(true)).fetch();
   }
@@ -85,7 +86,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
   /**
    * Create a new {@link JPAQuery} using the given {@link EntityManager}
    */
-  @SuppressWarnings("WeakerAccess")
+  @SuppressWarnings({"WeakerAccess", "unused"})
   protected JPAQuery createQuery() {
     return queryFactory.query();
   }
@@ -109,17 +110,17 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
   /**
    * Implement this method and return your Entitymanager. You can probably use code like:
    *
-   * @return the EntityManager
-   * @PersistenceContext private javax.persistence.EntityManager entityManager;
-   * @Override protected javax.persistence.EntityManager getEntityManager() { return
-   * this.entityManager; }
+   * \@PersistenceContext private javax.persistence.EntityManager entityManager;
+   * protected javax.persistence.EntityManager getEntityManager() { return this.entityManager; }
    */
   protected abstract EntityManager getEntityManager();
 
+  @SuppressWarnings("unchecked")
   private Class<ENTITY> getEntityClass() {
     return (Class<ENTITY>) typeToken.getRawType();
   }
 
+  @SuppressWarnings("UnnecessaryBoxing")
   private Predicate getActivePredicate(boolean activeState) {
     EntityPathBase<ENTITY> entityPath = getEntityPath();
     try {
@@ -131,7 +132,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
           .getMethodByReflection(fieldFromEntity, METHOD_EQUALS, Boolean.class);
       return (Predicate) method.invoke(fieldFromEntity, Boolean.valueOf(activeState));
     } catch (NoSuchFieldException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-      log.debug("Returning always-true predicate", e);
+      log.debug("Returning always-true predicate");
       return new BooleanBuilder();
     }
   }
@@ -202,16 +203,16 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
 
     // Debug logging
     if (log.isDebugEnabled()) {
-      String joined = "";
+      StringBuilder joined = new StringBuilder();
       boolean first = true;
       for (String s : arguments.keySet()) {
         if (!first) {
-          joined += ",";
+          joined.append(",");
         }
-        joined += s;
+        joined.append(s);
         first = false;
       }
-      log.debug("Requested Predicates for Arguments: {}", joined);
+      log.debug("Requested Predicates for Arguments: {}", joined.toString());
     }
 
     //"Active" Attribute in- or exclusion
@@ -292,7 +293,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
     for (Field field : clazz.getDeclaredFields()) {
       if (field.isAnnotationPresent(Aspect.class)) {
         Aspect aspect = field.getAnnotation(Aspect.class);
-        log.debug("Processing aspect (sort) for Field:{}", field);
+        log.trace("Processing aspect (sort) for Field:{}", field);
 
         String[] filterNames = new String[0];
         if (field.isAnnotationPresent(AlternativeNames.class)) {
@@ -302,7 +303,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
 
         if (aspect.filterable() && (field.getName().equals(value) || arrayContainsValue(
             filterNames, value))) {
-          log.debug("This is the aspect we are filtering for! {}", aspect);
+          log.trace("This is the aspect we are filtering for! {}", aspect);
 
           EntityPathBase<ENTITY> entityPath = getEntityPath();
           try {
@@ -310,7 +311,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
             Object fieldFromEntity = fieldDefinition.get(entityPath);
             String methodToInvoke =
                 SORT_DIRECTION_VALUE_REVERSE.equals(direction) ? METHOD_SORT_DESC : METHOD_SORT_ASC;
-            log.debug("Trying to invoke Method {} with parameter of type {} on class {}",
+            log.trace("Trying to invoke Method {} with parameter of type {} on class {}",
                 methodToInvoke, field.getType(), fieldFromEntity.getClass());
             Method method;
             try {
@@ -357,7 +358,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
     for (Field field : clazz.getDeclaredFields()) {
       if (field.isAnnotationPresent(Aspect.class)) {
         Aspect aspect = field.getAnnotation(Aspect.class);
-        log.debug("Processing aspect for Field:{}", field);
+        log.trace("Processing aspect for Field:{}", field);
         if (aspect.filterable()) {
           List<String> filterNames = new ArrayList<>();
 
@@ -380,7 +381,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
               if (valuesForKeys.size() > 1) {
                 methodToInvoke = METHOD_IN;
               }
-              log.debug("Trying to invoke Method {} with parameter of type {} on class {}",
+              log.trace("Trying to invoke Method {} with parameter of type {} on class {}",
                   methodToInvoke, field.getType(), fieldFromEntity.getClass());
 
               Method method = Reflection
@@ -424,7 +425,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
   @Override
   public void addPermanentQueryAttribute(String key, Collection<String> values) {
     log.debug("Adding permanent Attribute {}:{}", key, values);
-    permanentQueryAttributes.put(key, new ArrayList<String>());
+    permanentQueryAttributes.put(key, new ArrayList<>());
     permanentQueryAttributes.get(key).addAll(values);
   }
 

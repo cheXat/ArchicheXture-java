@@ -1,20 +1,16 @@
 package at.chex.archichexture.rest;
 
-import at.chex.archichexture.annotation.Exposed;
 import at.chex.archichexture.helpers.Reflection;
 import at.chex.archichexture.model.BaseEntity;
 import at.chex.archichexture.repository.BaseRepository;
-import at.chex.archichexture.rest.config.RestConfig;
-import at.chex.archichexture.rest.config.RestConfigFactory;
-import com.google.common.base.Strings;
-import com.google.gson.JsonObject;
 import java.io.Serializable;
-import java.lang.reflect.Field;
+import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -35,11 +31,6 @@ public abstract class BaseRestController<ENTITY extends BaseEntity>
 
   private static final long serialVersionUID = 1L;
   private static final Logger log = LoggerFactory.getLogger(BaseRestController.class);
-  private RestConfig restConfig = RestConfigFactory.get();
-
-  protected RestConfig getConfig() {
-    return this.restConfig;
-  }
 
   /**
    * Execute PUT
@@ -96,27 +87,26 @@ public abstract class BaseRestController<ENTITY extends BaseEntity>
    * Execute update of an entity request
    */
   @SuppressWarnings("WeakerAccess")
-  protected Response internalExecutePOSTRequest(Long id, ENTITY formParam) {
+  protected ENTITY internalExecutePOSTRequest(Long id, ENTITY formParam) {
     log.debug("Update entity with id {} and formParam {}", id, formParam);
 
     if (!isIdAccepted(id)) {
       log.debug("Id {} was not accepted to process", id);
-      return Response.status(Response.Status.EXPECTATION_FAILED).build();
+      throw new WebApplicationException(HttpURLConnection.HTTP_BAD_REQUEST);
     }
 
     ENTITY loadedEntityById = loadEntityById(id);
     if (null == loadedEntityById) {
       log.warn("Unable to load entity with ID {} in {}", id, getEntityRepository().getClass());
-      return Response.status(Response.Status.EXPECTATION_FAILED).build();
+      throw new WebApplicationException(HttpURLConnection.HTTP_BAD_REQUEST);
     }
 
     try {
       ENTITY entity = updateOrCreateEntityFromParameters(formParam, loadedEntityById);
       log.info("Successfully updated {}", entity);
-      return Response.ok(
-          entity).build();
+      return entity;
     } catch (IllegalArgumentException ex) {
-      return Response.status(Response.Status.EXPECTATION_FAILED).build();
+      throw new WebApplicationException(HttpURLConnection.HTTP_BAD_REQUEST);
     }
   }
 
@@ -140,30 +130,26 @@ public abstract class BaseRestController<ENTITY extends BaseEntity>
 
   @SuppressWarnings("WeakerAccess")
   @Nonnull
-  protected Response internalExecuteDELETERequest(@Nonnull Long id) {
+  protected Boolean internalExecuteDELETERequest(@Nonnull Long id) {
     log.debug("Delete entity with id {}", id);
     ENTITY entity = loadEntityById(id);
-    if (this.getEntityRepository().delete(entity)) {
-      return Response.ok().build();
-    }
-    return Response.status(Response.Status.PRECONDITION_FAILED).build();
+    return this.getEntityRepository().delete(entity);
   }
 
   /**
    * Execute the GET Request for the given id/token
    */
   @SuppressWarnings("WeakerAccess")
-  @Nonnull
-  protected Response internalGETRequest(@Nonnull Long id) {
+  @Nullable
+  protected ENTITY internalGETRequest(@Nonnull Long id) {
     log.trace("Incoming request for id {}", id);
 
     if (!isIdAccepted(id)) {
       log.debug("Id {} was not accepted to process", id);
-      return Response.status(Response.Status.EXPECTATION_FAILED).build();
+      throw new WebApplicationException(HttpURLConnection.HTTP_BAD_REQUEST);
     }
 
-    ENTITY entity = loadEntityById(id);
-    return Response.ok(null == entity ? null : transformToJsonObject(entity)).build();
+    return loadEntityById(id);
   }
 
   /**
@@ -171,14 +157,14 @@ public abstract class BaseRestController<ENTITY extends BaseEntity>
    */
   @SuppressWarnings("WeakerAccess")
   @Nonnull
-  protected Response internalGETListRequest(@Nonnull UriInfo info, int limit, int offset) {
+  protected List<ENTITY> internalGETListRequest(@Nonnull UriInfo info, int limit, int offset) {
     log.trace("Incoming LIST request");
 
     MultivaluedMap<String, String> pathParametersMap = info
         .getQueryParameters();
 
     if (!isRequiredParametersSet(pathParametersMap)) {
-      return Response.status(Response.Status.EXPECTATION_FAILED).build();
+      throw new WebApplicationException(HttpURLConnection.HTTP_BAD_REQUEST);
     }
 
     List<ENTITY> entityList = getAdditionalEntitiesForListRequest(pathParametersMap);
@@ -187,8 +173,7 @@ public abstract class BaseRestController<ENTITY extends BaseEntity>
           pathParametersMap, limit - entityList.size(), offset));
     }
 
-    return Response.ok(postProcessEntitiesCollectionBeforeReturn(transformToJsonObject(entityList)))
-        .build();
+    return postProcessEntitiesCollectionBeforeReturn(entityList);
   }
 
   /**
@@ -207,54 +192,13 @@ public abstract class BaseRestController<ENTITY extends BaseEntity>
   @Nonnull
   protected List<ENTITY> getAdditionalEntitiesForListRequest(
       @Nonnull MultivaluedMap<String, String> pathParametersMap) {
-    return new ArrayList<ENTITY>();
+    return new ArrayList<>();
   }
 
   @SuppressWarnings("WeakerAccess")
   @Nonnull
-  protected Collection<JsonObject> postProcessEntitiesCollectionBeforeReturn(
-      @Nonnull Collection<JsonObject> entityCollection) {
-    return entityCollection;
-  }
-
-  @SuppressWarnings("WeakerAccess")
-  @Nonnull
-  protected List<JsonObject> transformToJsonObject(@Nonnull List<ENTITY> entityList) {
-    List<JsonObject> returnList = new ArrayList<>();
-    for (ENTITY e : entityList) {
-      JsonObject entityBaseJsonObject = null == e ? null : transformToJsonObject(e);
-      if (null != entityBaseJsonObject) {
-        returnList.add(entityBaseJsonObject);
-      }
-    }
-    return returnList;
-  }
-
-  /**
-   * Transform the given {@link ENTITY} to the corresponding JsonObject before
-   * returning it after the webservice call.
-   */
-  @SuppressWarnings("WeakerAccess")
-  @Nonnull
-  protected JsonObject transformToJsonObject(@Nonnull ENTITY entity) {
-    JsonObject jsonObject = new JsonObject();
-
-    List<Field> annotatedFields = Reflection.getAnnotatedFields(Exposed.class, entity.getClass());
-    for (Field field : annotatedFields) {
-      Exposed annotation = field.getAnnotation(Exposed.class);
-      String key = Strings.isNullOrEmpty(annotation.exposedName()) ? field.getName()
-          : annotation.exposedName();
-      if (!field.isAccessible()) {
-        field.setAccessible(true);
-      }
-      try {
-        Object o = field.get(entity);
-        jsonObject.addProperty(key, String.valueOf(o));
-      } catch (IllegalAccessException e) {
-        log.warn("Unable to access entity field!", e);
-      }
-    }
-
-    return jsonObject;
+  protected List<ENTITY> postProcessEntitiesCollectionBeforeReturn(
+      @Nonnull Collection<ENTITY> entityCollection) {
+    return new ArrayList<>(entityCollection);
   }
 }

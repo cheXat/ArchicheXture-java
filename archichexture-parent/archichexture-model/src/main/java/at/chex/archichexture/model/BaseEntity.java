@@ -1,8 +1,9 @@
 package at.chex.archichexture.model;
 
+import at.chex.archichexture.HasId;
 import at.chex.archichexture.annotation.Aspect;
 import at.chex.archichexture.annotation.Exposed;
-import at.chex.archichexture.annotation.Exposed.ExposureType;
+import at.chex.archichexture.annotation.Exposed.Visibility;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import java.io.Serializable;
@@ -22,7 +23,7 @@ import javax.xml.bind.annotation.XmlElement;
  * @since 24/03/2017
  */
 @MappedSuperclass
-public abstract class BaseEntity implements Serializable {
+public abstract class BaseEntity implements HasId, Serializable {
 
   public static final String FIELD_NAME_ID = "id";
   private static final long serialVersionUID = 1L;
@@ -34,7 +35,7 @@ public abstract class BaseEntity implements Serializable {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @XmlElement(name = FIELD_NAME_ID)
-  @Exposed(exposure = ExposureType.PUBLIC)
+  @Exposed(exposure = Visibility.PUBLIC)
   private Long id;
 
   /**
@@ -42,6 +43,7 @@ public abstract class BaseEntity implements Serializable {
    *
    * @return the id of this entity
    */
+  @Override
   public Long getId() {
     return id;
   }
@@ -51,6 +53,7 @@ public abstract class BaseEntity implements Serializable {
    *
    * @param id the new id
    */
+  @Override
   public void setId(Long id) {
     this.id = id;
   }

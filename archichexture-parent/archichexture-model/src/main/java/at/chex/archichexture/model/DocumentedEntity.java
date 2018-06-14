@@ -2,7 +2,7 @@ package at.chex.archichexture.model;
 
 import at.chex.archichexture.annotation.Aspect;
 import at.chex.archichexture.annotation.Exposed;
-import at.chex.archichexture.annotation.Exposed.ExposureType;
+import at.chex.archichexture.annotation.Exposed.Visibility;
 import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
@@ -23,19 +23,19 @@ public class DocumentedEntity extends TitledEntity {
 
   @Column(name = "created_at")
   @Temporal(TemporalType.TIMESTAMP)
-  @Exposed(exposure = ExposureType.HIDDEN)
+  @Exposed(exposure = Visibility.HIDDEN)
   private Date createdAt = new Date();
   @Column(name = "updated_at")
   @Temporal(TemporalType.TIMESTAMP)
-  @Exposed(exposure = ExposureType.HIDDEN)
+  @Exposed(exposure = Visibility.HIDDEN)
   private Date updatedAt = new Date();
   @Column(name = "deleted_at")
   @Temporal(TemporalType.TIMESTAMP)
-  @Exposed(exposure = ExposureType.HIDDEN)
+  @Exposed(exposure = Visibility.HIDDEN)
   private Date deletedAt = null;
   @Aspect
   @Column(name = FIELD_NAME_ACTIVE)
-  @Exposed(exposure = ExposureType.HIDDEN)
+  @Exposed(exposure = Visibility.HIDDEN)
   private Boolean active = true;
 
   @PrePersist

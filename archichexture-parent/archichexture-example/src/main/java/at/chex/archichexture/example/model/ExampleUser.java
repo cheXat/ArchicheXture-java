@@ -3,9 +3,14 @@ package at.chex.archichexture.example.model;
 import at.chex.archichexture.annotation.AlternativeNames;
 import at.chex.archichexture.annotation.Aspect;
 import at.chex.archichexture.annotation.Exposed;
+import at.chex.archichexture.annotation.Exposed.Exposure;
 import at.chex.archichexture.extension.model.User;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 /**
@@ -20,7 +25,7 @@ import javax.persistence.Table;
 public class ExampleUser extends User {
 
   @Aspect
-  @Exposed
+  @Exposed(exposedName = "vorname")
   @Column(name = "firstname")
   private String firstname;
   @Aspect
@@ -37,6 +42,11 @@ public class ExampleUser extends User {
   @AlternativeNames({"telefone", "tel"})
   @Column(name = "telephone")
   private String telephone;
+  @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+  @JoinColumn(name = "example")
+  @Aspect
+  @Exposed(exposeAs = Exposure.ID)
+  private Example example;
 
   public String getFirstname() {
     return firstname;
@@ -68,5 +78,13 @@ public class ExampleUser extends User {
 
   public void setTelephone(String telephone) {
     this.telephone = telephone;
+  }
+
+  public Example getExample() {
+    return example;
+  }
+
+  public void setExample(Example example) {
+    this.example = example;
   }
 }

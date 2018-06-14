@@ -3,7 +3,7 @@ package at.chex.archichexture.extension.model;
 import at.chex.archichexture.annotation.AlternativeNames;
 import at.chex.archichexture.annotation.Aspect;
 import at.chex.archichexture.annotation.Exposed;
-import at.chex.archichexture.annotation.Exposed.ExposureType;
+import at.chex.archichexture.annotation.Exposed.Visibility;
 import at.chex.archichexture.model.BaseEntity;
 import java.util.Date;
 import javax.persistence.Column;
@@ -23,7 +23,7 @@ public abstract class User extends BaseEntity {
   public static final String FIELDNAME_TOKEN = "token";
   public static final String FIELDNAME_USERNAME = "username";
 
-  @Aspect
+  @Aspect(filterable = false, modifieable = false, strict = true)
   @Exposed
   @Column(name = FIELDNAME_TOKEN)
   private String token;
@@ -37,10 +37,10 @@ public abstract class User extends BaseEntity {
   @Column(name = FIELDNAME_USERNAME)
   @AlternativeNames({"user_name"})
   private String username;
-  @Exposed(exposure = ExposureType.HIDDEN)
+  @Exposed(exposure = Visibility.HIDDEN)
   @Column(name = "password")
   private String password;
-  @Exposed(exposure = ExposureType.HIDDEN)
+  @Exposed(exposure = Visibility.HIDDEN)
   @Column(name = "password_salt", columnDefinition = "BLOB", length = 256)
   @Lob
   private byte[] passwordSalt;

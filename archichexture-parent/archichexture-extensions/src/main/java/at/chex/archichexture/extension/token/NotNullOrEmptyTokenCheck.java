@@ -2,7 +2,6 @@ package at.chex.archichexture.extension.token;
 
 import at.chex.archichexture.token.TokenCheck;
 import com.google.common.base.Strings;
-import javax.ws.rs.core.Response.Status;
 
 /**
  * @author cheX GmbH Austria {@literal chex@chex.at}
@@ -12,10 +11,7 @@ import javax.ws.rs.core.Response.Status;
 public class NotNullOrEmptyTokenCheck implements TokenCheck {
 
   @Override
-  public int getTokenResponseCode(String token, boolean resetTokenExpiration) {
-    if (Strings.isNullOrEmpty(token)) {
-      return Status.FORBIDDEN.getStatusCode();
-    }
-    return 0;
+  public boolean isTokenValid(String token, boolean resetTokenExpiration) {
+    return !Strings.isNullOrEmpty(token);
   }
 }

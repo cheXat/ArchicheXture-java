@@ -7,6 +7,8 @@ package at.chex.archichexture;
  */
 public interface Deactivatable {
 
+  String FIELD_NAME_ACTIVE = "active";
+
   Boolean getActive();
 
   void setActive(Boolean active);

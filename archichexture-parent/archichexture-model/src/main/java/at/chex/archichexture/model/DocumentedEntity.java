@@ -20,8 +20,6 @@ import javax.persistence.TemporalType;
 @MappedSuperclass
 public class DocumentedEntity extends TitledEntity implements Deactivatable {
 
-  public static final String FIELD_NAME_ACTIVE = "active";
-
   @Column(name = "created_at")
   @Temporal(TemporalType.TIMESTAMP)
   @Exposed(exposure = Visibility.HIDDEN)

@@ -1,5 +1,6 @@
 package at.chex.archichexture.repository.impl;
 
+import at.chex.archichexture.Deactivatable;
 import at.chex.archichexture.annotation.AlternativeNames;
 import at.chex.archichexture.annotation.Aspect;
 import at.chex.archichexture.annotation.RemoveOnDelete;
@@ -125,7 +126,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
     EntityPathBase<ENTITY> entityPath = getEntityPath();
     try {
       Field declaredField = entityPath.getClass()
-          .getDeclaredField(DocumentedEntity.FIELD_NAME_ACTIVE);
+          .getDeclaredField(Deactivatable.FIELD_NAME_ACTIVE);
       Object fieldFromEntity = declaredField.get(entityPath);
       log.debug("Returning active Query Predicate on Field {}", fieldFromEntity);
       Method method = Reflection
@@ -147,8 +148,8 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
    * #getActivePredicate(boolean)} when overriding this.
    */
   private boolean isActiveEntity(ENTITY entity) {
-    if (entity instanceof DocumentedEntity) {
-      return ((DocumentedEntity) entity).getActive();
+    if (entity instanceof Deactivatable) {
+      return ((Deactivatable) entity).getActive();
     }
     return true;
   }
@@ -572,13 +573,15 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
       return false;
     }
 
-    if (entity instanceof DocumentedEntity && !entity.getClass()
+    if (entity instanceof Deactivatable && !entity.getClass()
         .isAnnotationPresent(RemoveOnDelete.class)) {
-      Boolean visibleBefore = ((DocumentedEntity) entity).getActive();
+      Boolean visibleBefore = ((Deactivatable) entity).getActive();
       visibleBefore = null == visibleBefore ? true : visibleBefore;
-      ((DocumentedEntity) entity).setActive(false);
-      if (visibleBefore) {
-        ((DocumentedEntity) entity).setDeletedAt(new Date());
+      ((Deactivatable) entity).setActive(false);
+      if (entity instanceof DocumentedEntity) {
+        if (visibleBefore) {
+          ((DocumentedEntity) entity).setDeletedAt(new Date());
+        }
       }
       save(entity);
       return visibleBefore;

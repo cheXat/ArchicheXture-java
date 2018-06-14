@@ -30,17 +30,18 @@
     <version.slf4j>1.7.25</version.slf4j>
 
     <!-- 3rd Party Database support library -->
+    <version.cdi>1.2</version.cdi>
+    <version.gson>2.8.0</version.gson>
+    <version.guava>25.1-jre</version.guava>
+    <version.owner>1.0.9</version.owner>
     <version.persistence-api>2.2</version.persistence-api>
     <version.querydsl>4.2.1</version.querydsl>
-    <version.owner>1.0.9</version.owner>
-    <version.guava>25.1-jre</version.guava>
-    <version.gson>2.8.0</version.gson>
 
     <!-- TEST Stuff -->
     <version.cdi-unit>3.1.4</version.cdi-unit>
-    <version.junit>4.12</version.junit>
     <version.h2>1.4.192</version.h2>
-    <hibernate.version>5.2.4.Final</hibernate.version>
+    <version.junit>4.12</version.junit>
+    <version.hibernate>5.2.4.Final</version.hibernate>
   </properties>
 
   <dependencyManagement>
@@ -86,7 +87,7 @@
       <dependency>
         <groupId>javax.enterprise</groupId>
         <artifactId>cdi-api</artifactId>
-        <version>1.2</version>
+        <version>${version.cdi}</version>
       </dependency>
       <dependency>
         <groupId>org.aeonbits.owner</groupId>
@@ -109,13 +110,6 @@
         <artifactId>javax.persistence-api</artifactId>
         <version>${version.persistence-api}</version>
       </dependency>
-      <!-- This is needed in the queryDsl class generator -->
-      <!--dependency>
-        <groupId>org.eclipse.persistence</groupId>
-        <artifactId>javax.persistence</artifactId>
-        <version>${version.persistence-api}</version>
-        <scope>provided</scope>
-      </dependency-->
       <dependency>
         <groupId>com.querydsl</groupId>
         <artifactId>querydsl-jpa</artifactId>
@@ -147,7 +141,7 @@
       <dependency>
         <groupId>org.hibernate</groupId>
         <artifactId>hibernate-entitymanager</artifactId>
-        <version>${hibernate.version}</version>
+        <version>${version.hibernate}</version>
         <scope>test</scope>
       </dependency>
       <dependency>

@@ -1,4 +1,4 @@
-package at.chex.archichexture.test.model;
+package test.model;
 
 import at.chex.archichexture.annotation.Aspect;
 
@@ -7,7 +7,7 @@ import at.chex.archichexture.annotation.Aspect;
  * @author Jakob Galbavy {@literal jg@chex.at}
  * @since 06.01.18
  */
-public abstract class AbstractClass {
+abstract class AbstractClass {
 
   public static final int INT_VALUE = 4;
   @Aspect

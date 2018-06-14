@@ -1,4 +1,4 @@
-package at.chex.archichexture.test.model;
+package test.model;
 
 /**
  * @author cheX GmbH Austria {@literal chex@chex.at}

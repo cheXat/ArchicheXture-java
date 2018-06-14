@@ -13,7 +13,6 @@
     <module>archichexture-model</module>
     <module>archichexture-example</module>
     <module>archichexture-soa</module>
-    <module>archichexture-util</module>
     <module>archichexture-extensions</module>
   </modules>
   <packaging>pom</packaging>
@@ -65,11 +64,6 @@
       <dependency>
         <groupId>at.chex.archichexture</groupId>
         <artifactId>archichexture-javaee</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>at.chex.archichexture</groupId>
-        <artifactId>archichexture-util</artifactId>
         <version>${project.version}</version>
       </dependency>
 

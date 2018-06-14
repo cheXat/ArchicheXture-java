@@ -22,10 +22,6 @@
       <groupId>at.chex.archichexture</groupId>
       <artifactId>archichexture-core</artifactId>
     </dependency>
-    <dependency>
-      <groupId>at.chex.archichexture</groupId>
-      <artifactId>archichexture-util</artifactId>
-    </dependency>
 
     <!-- 3rd Party/JEE libraries -->
     <dependency>

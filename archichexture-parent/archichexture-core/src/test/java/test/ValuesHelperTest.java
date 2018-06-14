@@ -1,9 +1,8 @@
-package at.chex.archichexture.test;
+package test;
 
 import at.chex.archichexture.helpers.Values;
 import at.chex.archichexture.helpers.convert.Converter;
 import at.chex.archichexture.helpers.convert.StringConverter;
-import at.chex.archichexture.test.model.TargetClass;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
@@ -13,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
+import test.model.TargetClass;
 
 /**
  * @author cheX GmbH Austria {@literal chex@chex.at}

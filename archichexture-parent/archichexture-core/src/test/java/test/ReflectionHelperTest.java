@@ -1,11 +1,11 @@
-package at.chex.archichexture.test;
+package test;
 
 import at.chex.archichexture.helpers.Reflection;
-import at.chex.archichexture.test.model.ComplexClass;
-import at.chex.archichexture.test.model.SimpleClass;
-import at.chex.archichexture.test.model.TargetClass;
 import org.junit.Assert;
 import org.junit.Test;
+import test.model.ComplexClass;
+import test.model.SimpleClass;
+import test.model.TargetClass;
 
 /**
  * @author cheX GmbH Austria {@literal chex@chex.at}

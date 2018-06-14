@@ -15,7 +15,7 @@
   <dependencies>
     <dependency>
       <groupId>at.chex.archichexture</groupId>
-      <artifactId>archichexture-util</artifactId>
+      <artifactId>archichexture-core</artifactId>
     </dependency>
     <!-- 3rd Party/JEE libraries -->
     <dependency>

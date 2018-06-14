@@ -1,4 +1,4 @@
-package at.chex.archichexture.test.model;
+package test.model;
 
 import at.chex.archichexture.annotation.AlternativeNames;
 import at.chex.archichexture.annotation.Aspect;

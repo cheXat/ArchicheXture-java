@@ -9,8 +9,6 @@ import at.chex.archichexture.annotation.Exposed.Visibility;
 import com.google.common.base.Strings;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.sun.istack.internal.NotNull;
-import com.sun.istack.internal.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -19,6 +17,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * @author cheX GmbH Austria {@literal chex@chex.at}
@@ -33,8 +33,8 @@ public class Reflection {
   /**
    * Will return the method with the given name in the given object and its inherited classes
    */
-  @SuppressWarnings("WeakerAccess")
-  @NotNull
+  @SuppressWarnings({"WeakerAccess", "unused"})
+  @Nonnull
   public static List<Field> getAnnotatedFields(Class<? extends Annotation> annotation,
       Class<?> clazz) {
     List<Field> returnList = new ArrayList<>();
@@ -122,7 +122,7 @@ public class Reflection {
    * Call this to map all values, you need from the left to the right (if both fields exist)
    */
   @SuppressWarnings("WeakerAccess")
-  @Nullable
+  @Nonnull
   public static <TYPE> TYPE transferValuesFromLeftToRight(Object left, TYPE right) {
     Class<?> classToWorkWith = right.getClass();
     // loop through the class hierarchy
@@ -205,6 +205,7 @@ public class Reflection {
   }
 
   @SuppressWarnings("WeakerAccess")
+  @Nonnull
   public static <TYPE> JsonObject transferValuesToJson(TYPE left, JsonObject jsonObject) {
     Class<?> classToWorkWith = left.getClass();
     // loop through the class hierarchy

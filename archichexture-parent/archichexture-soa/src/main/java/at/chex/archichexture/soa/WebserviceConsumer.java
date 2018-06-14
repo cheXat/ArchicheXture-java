@@ -3,8 +3,6 @@ package at.chex.archichexture.soa;
 import at.chex.archichexture.soa.connection.HttpConnection;
 import at.chex.archichexture.soa.connection.JsonHttpConnection;
 import at.chex.archichexture.soa.connection.SoapHttpConnection;
-import java.io.IOException;
-import javax.xml.bind.JAXBException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,28 +17,22 @@ public class WebserviceConsumer {
   private WebserviceConsumer() {
   }
 
+  @SuppressWarnings("unused")
   public static <RESULT> RESULT callSoapService(String url, Class<RESULT> resultingClass) {
     try (HttpConnection<RESULT> connection = new SoapHttpConnection<>(resultingClass)) {
       return connection.get(url);
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (JAXBException e) {
-      e.printStackTrace();
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error(e.getLocalizedMessage(), e);
     }
     return null;
   }
 
+  @SuppressWarnings("unused")
   public static <RESULT> RESULT callJsonService(String url, Class<RESULT> resultingClass) {
     try (HttpConnection<RESULT> connection = new JsonHttpConnection<>(resultingClass)) {
       return connection.get(url);
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (JAXBException e) {
-      e.printStackTrace();
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error(e.getLocalizedMessage(), e);
     }
     return null;
   }

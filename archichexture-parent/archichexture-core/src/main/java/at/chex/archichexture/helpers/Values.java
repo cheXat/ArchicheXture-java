@@ -24,9 +24,10 @@ import java.util.Set;
  */
 public class Values {
 
+  @SuppressWarnings("WeakerAccess")
   public static final String SPLIT_CHARACTER = ",";
-  private static Values self = new Values();
-  private Map<Class<?>, Converter<?>> converter = new HashMap<>();
+  private static final Values self = new Values();
+  private final Map<Class<?>, Converter<?>> converter = new HashMap<>();
 
   private Values() {
     converter.put(BigDecimal.class, new BigDecimalConverter());

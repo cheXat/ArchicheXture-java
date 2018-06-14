@@ -134,7 +134,7 @@ public class Reflection {
         // check for @Aspect annotations
         if (fieldToSetOnEntity.isAnnotationPresent(Aspect.class)) {
           Aspect aspect = fieldToSetOnEntity.getAnnotation(Aspect.class);
-          if (aspect.modifieable()) {
+          if (aspect.modifiable()) {
             List<String> filterNames = new ArrayList<>();
             filterNames.add(fieldToSetOnEntity.getName());
 

@@ -113,7 +113,7 @@ public abstract class BaseRestController<ENTITY extends BaseEntity>
   /**
    * Override this to add additional checks for the id
    */
-  @SuppressWarnings("WeakerAccess")
+  @SuppressWarnings({"WeakerAccess", "BooleanMethodIsAlwaysInverted"})
   protected boolean isIdAccepted(@Nullable Long id) {
     return (null != id && id > 0L);
   }
@@ -179,7 +179,7 @@ public abstract class BaseRestController<ENTITY extends BaseEntity>
   /**
    * Override this to enforce required parameters
    */
-  @SuppressWarnings({"WeakerAccess", "unused"})
+  @SuppressWarnings({"WeakerAccess", "unused", "SameReturnValue"})
   protected boolean isRequiredParametersSet(@Nonnull MultivaluedMap<String, String> parametersMap) {
     return true;
   }

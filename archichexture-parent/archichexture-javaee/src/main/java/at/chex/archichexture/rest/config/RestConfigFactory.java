@@ -7,6 +7,7 @@ import org.aeonbits.owner.ConfigFactory;
  * @author Jakob Galbavy {@literal jg@chex.at}
  * @since 27/03/2017
  */
+@SuppressWarnings("WeakerAccess")
 public class RestConfigFactory {
 
   private RestConfigFactory() {
@@ -15,6 +16,7 @@ public class RestConfigFactory {
   /**
    * Load the config
    */
+  @SuppressWarnings("unused")
   public static RestConfig get() {
     return ConfigFactory.create(RestConfig.class);
   }

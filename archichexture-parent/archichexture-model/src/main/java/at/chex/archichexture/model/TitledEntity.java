@@ -18,6 +18,7 @@ import javax.persistence.MappedSuperclass;
 @MappedSuperclass
 public abstract class TitledEntity extends BaseEntity {
 
+  @SuppressWarnings({"WeakerAccess", "unused"})
   public static final String FIELD_NAME_TITLE = "title";
   /**
    * The title of this Entity
@@ -30,6 +31,7 @@ public abstract class TitledEntity extends BaseEntity {
   /**
    * The title of this Entity
    */
+  @SuppressWarnings({"WeakerAccess", "unused"})
   public String getTitle() {
     return title;
   }
@@ -37,6 +39,7 @@ public abstract class TitledEntity extends BaseEntity {
   /**
    * Set the title of this Entity
    */
+  @SuppressWarnings("unused")
   public void setTitle(String title) {
     this.title = title;
   }

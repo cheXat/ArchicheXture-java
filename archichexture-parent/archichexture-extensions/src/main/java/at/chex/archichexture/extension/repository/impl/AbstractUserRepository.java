@@ -39,7 +39,7 @@ public abstract class AbstractUserRepository<USER extends User> extends
       return null;
     }
     SimplePath<String> tokenPath = Expressions
-        .path(String.class, getEntityPath(), User.FIELDNAME_TOKEN);
+        .path(String.class, getEntityPath(), User.FIELD_NAME_TOKEN);
 
     User user = query().selectFrom(getEntityPath()).where(tokenPath.eq(token)).fetchOne();
     if (null == user) {
@@ -56,13 +56,13 @@ public abstract class AbstractUserRepository<USER extends User> extends
     }
 
     SimplePath<String> usernamePath = Expressions
-        .path(String.class, getEntityPath(), User.FIELDNAME_USERNAME);
+        .path(String.class, getEntityPath(), User.FIELD_NAME_USERNAME);
 
     User user = query().selectFrom(getEntityPath()).where(usernamePath.eq(username)).fetchFirst();
     log.debug("lookup customer with username:{} returned {}", username, user);
 
     if (null == user || !validatePasswordFor((USER) user, password)) {
-      log.debug("User {} not found or password didnt match", user);
+      log.debug("User {} not found or password didn't match", user);
       return null;
     }
 
@@ -80,7 +80,7 @@ public abstract class AbstractUserRepository<USER extends User> extends
 
   private boolean tokenExists(@Nonnull String token) {
     SimplePath<String> tokenPath = Expressions
-        .path(String.class, getEntityPath(), User.FIELDNAME_TOKEN);
+        .path(String.class, getEntityPath(), User.FIELD_NAME_TOKEN);
 
     return !query().selectOne().from(getEntityPath()).where(tokenPath.eq(token)).fetch().isEmpty();
   }

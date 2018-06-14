@@ -25,13 +25,14 @@ import javax.xml.bind.annotation.XmlElement;
 @MappedSuperclass
 public abstract class BaseEntity implements HasId, Serializable {
 
+  @SuppressWarnings({"WeakerAccess", "unused"})
   public static final String FIELD_NAME_ID = "id";
   private static final long serialVersionUID = 1L;
   /**
    * We expect, the database takes care about generating the primary key. Of course, you can
    * generate it yourself and set it via {@link #setId(Long)}
    */
-  @Aspect(modifieable = false, strict = true)
+  @Aspect(modifiable = false, strict = true)
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @XmlElement(name = FIELD_NAME_ID)
@@ -63,6 +64,7 @@ public abstract class BaseEntity implements HasId, Serializable {
    *
    * @return valid id is set?
    */
+  @SuppressWarnings("unused")
   public boolean isNew() {
     return null == this.id || this.id < 1L;
   }

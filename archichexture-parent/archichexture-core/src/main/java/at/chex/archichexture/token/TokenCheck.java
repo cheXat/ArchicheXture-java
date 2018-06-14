@@ -18,5 +18,6 @@ public interface TokenCheck {
    * website action) or stay, as it is (e.g. scheduled poller)
    * @return 0 if the token is valid
    */
+  @SuppressWarnings({"unused", "BooleanMethodIsAlwaysInverted"})
   boolean isTokenValid(String token, boolean resetTokenExpiration);
 }

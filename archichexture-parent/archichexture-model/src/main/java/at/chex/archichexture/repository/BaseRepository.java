@@ -69,6 +69,7 @@ public interface BaseRepository<ENTITY extends BaseEntity> extends
    * These arguments will be handed over on each query, narrowing down your search by a fixed value
    * (e.g. logged in User)
    */
+  @SuppressWarnings("unused")
   void addPermanentQueryAttribute(String key, Collection<String> values);
 
   /**
@@ -80,5 +81,6 @@ public interface BaseRepository<ENTITY extends BaseEntity> extends
   /**
    * Select for a List of {@link ENTITY}s with the given primary keys
    */
+  @SuppressWarnings("unused")
   List<ENTITY> findEntityById(List<Long> id);
 }

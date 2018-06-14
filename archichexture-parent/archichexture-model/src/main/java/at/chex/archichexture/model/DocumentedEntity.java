@@ -1,5 +1,6 @@
 package at.chex.archichexture.model;
 
+import at.chex.archichexture.Deactivatable;
 import at.chex.archichexture.annotation.Aspect;
 import at.chex.archichexture.annotation.Exposed;
 import at.chex.archichexture.annotation.Exposed.Visibility;
@@ -17,7 +18,7 @@ import javax.persistence.TemporalType;
  * @since 09.11.17
  */
 @MappedSuperclass
-public class DocumentedEntity extends TitledEntity {
+public class DocumentedEntity extends TitledEntity implements Deactivatable {
 
   public static final String FIELD_NAME_ACTIVE = "active";
 
@@ -75,10 +76,12 @@ public class DocumentedEntity extends TitledEntity {
     this.deletedAt = deletedAt;
   }
 
+  @Override
   public Boolean getActive() {
     return null != active && active;
   }
 
+  @Override
   public void setActive(Boolean active) {
     this.active = active;
   }

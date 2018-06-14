@@ -24,7 +24,7 @@ public @interface Aspect {
   /**
    * Can this attribute be modified by an update query?
    */
-  boolean modifieable() default true;
+  boolean modifiable() default true;
 
   /**
    * When filtering, should this be an 'equals' or a 'like' query? E.g. do you want to be able to use '%' and search case-insensitive -> leave it #false

@@ -15,10 +15,12 @@ public class TestEntity extends BaseEntity {
   @Column(name = "name")
   private String name;
 
+  @SuppressWarnings("unused")
   public String getName() {
     return name;
   }
 
+  @SuppressWarnings("unused")
   public void setName(String name) {
     this.name = name;
   }

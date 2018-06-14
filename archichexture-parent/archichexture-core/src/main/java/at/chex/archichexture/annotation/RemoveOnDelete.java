@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Subclasses of {@link at.chex.archichexture.model.DocumentedEntity} will be just deactivated by default. If you want to delete instead, use this annotation.
+ * Subclasses of {@link at.chex.archichexture.Deactivatable} will be just deactivated by default. If you want to delete instead, use this annotation.
  *
  * @author cheX GmbH Austria {@literal chex@chex.at}
  * @author Jakob Galbavy {@literal jg@chex.at}

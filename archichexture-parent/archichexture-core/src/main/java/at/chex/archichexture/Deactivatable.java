@@ -3,13 +3,11 @@ package at.chex.archichexture;
 /**
  * @author cheX GmbH Austria {@literal chex@chex.at}
  * @author Jakob Galbavy {@literal jg@chex.at}
- * @since 13.06.18
+ * @since 14.06.18
  */
-public interface HasId {
+public interface Deactivatable {
 
-  @SuppressWarnings("unused")
-  Long getId();
+  Boolean getActive();
 
-  @SuppressWarnings("unused")
-  void setId(Long id);
+  void setActive(Boolean active);
 }

@@ -5,7 +5,6 @@ import at.chex.archichexture.annotation.Aspect;
 import at.chex.archichexture.annotation.Exposed;
 import at.chex.archichexture.annotation.Exposed.Visibility;
 import at.chex.archichexture.annotation.RemoveOnDelete;
-import at.chex.archichexture.model.DocumentedEntity;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
@@ -17,9 +16,7 @@ import javax.persistence.Table;
  */
 @Entity
 @Table(name = "examples")
-/**
- * The {@link at.chex.archichexture.annotation.RemoveOnDelete} Annotation defines, if this {@link Entity} is deactivated (default, when subclassing {@link DocumentedEntity}) or deleted (Annotation present)
- */
+// The {@link at.chex.archichexture.annotation.RemoveOnDelete} Annotation defines, if this {@link Entity} is deactivated (default, when subclassing {@link DocumentedEntity}) or deleted (Annotation present)
 @RemoveOnDelete
 public class Example extends DateExample {
 

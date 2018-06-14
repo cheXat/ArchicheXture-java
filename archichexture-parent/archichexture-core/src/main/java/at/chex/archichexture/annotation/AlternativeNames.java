@@ -16,7 +16,7 @@ public @interface AlternativeNames {
 
   /**
    * Additional names, this field can be filtered with. E.g. i defined that attribute to be named "datetime" but my legacy client filters for "date".
-   * The actual fieldname is always included in the attribute list!
+   * The actual field name is always included in the attribute list!
    */
   String[] value();
 }

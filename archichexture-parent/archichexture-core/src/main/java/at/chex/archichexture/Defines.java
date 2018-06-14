@@ -13,7 +13,7 @@ public interface Defines {
   String KEYWORD_TOKEN = "token";
 
   /**
-   * The consumable webservice type formencoded
+   * The consumable webservice type form-urlencoded
    */
   String MEDIA_TYPE_X_WWW_FORM_ENCODED = "application/x-www-form-urlencoded";
 }

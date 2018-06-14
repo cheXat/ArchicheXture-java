@@ -1,7 +1,5 @@
 package at.chex.archichexture.test;
 
-import java.io.FileNotFoundException;
-import java.sql.SQLException;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
@@ -21,7 +19,7 @@ public abstract class AbstractJPAHibernateTest {
   protected static EntityManager em;
 
   @BeforeClass
-  public static void init() throws FileNotFoundException, SQLException {
+  public static void init() {
     emf = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
     em = emf.createEntityManager();
   }

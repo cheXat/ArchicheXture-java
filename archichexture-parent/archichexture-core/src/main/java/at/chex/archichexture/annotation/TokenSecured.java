@@ -10,7 +10,9 @@ import at.chex.archichexture.token.TokenCheck;
  */
 public @interface TokenSecured {
 
+  @SuppressWarnings("unused")
   String value() default Defines.KEYWORD_TOKEN;
 
+  @SuppressWarnings("unused")
   Class<? extends TokenCheck> checkClass();
 }

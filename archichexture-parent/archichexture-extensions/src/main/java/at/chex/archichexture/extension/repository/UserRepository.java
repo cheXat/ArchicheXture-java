@@ -28,5 +28,6 @@ public interface UserRepository<USER extends User> extends BaseRepository<USER> 
   /**
    * Overwrite the current password for the given user
    */
+  @SuppressWarnings("unused")
   USER overridePasswordFor(USER user, String newPassword);
 }

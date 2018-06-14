@@ -25,11 +25,13 @@ import javax.persistence.Table;
 public class ExampleUser extends User {
 
   @Aspect
-  @Exposed(exposedName = "vorname")
+  @Exposed(exposedName = "first_name")
+  @AlternativeNames({"first_name", "first-name"})
   @Column(name = "firstname")
   private String firstname;
   @Aspect
   @Exposed
+  @AlternativeNames({"last_name", "last-name"})
   @Column(name = "lastname")
   private String lastname;
   @Aspect

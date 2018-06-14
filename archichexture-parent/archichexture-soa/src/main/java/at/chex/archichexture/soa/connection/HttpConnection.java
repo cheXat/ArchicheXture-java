@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import javax.xml.bind.JAXBException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,20 +14,20 @@ import org.slf4j.LoggerFactory;
 public abstract class HttpConnection<RESULT> implements AutoCloseable {
 
   private static final Logger log = LoggerFactory.getLogger(HttpConnection.class);
-  protected InputStream inputStream;
+  InputStream inputStream;
   private HttpURLConnection connection;
   private Class<RESULT> resultingClass;
 
-  public HttpConnection(Class<RESULT> resultingClass) throws IOException, JAXBException {
+  HttpConnection(Class<RESULT> resultingClass) {
     this.resultingClass = resultingClass;
     log.debug("Created new HTTP Connection for class {}", resultingClass.getSimpleName());
   }
 
-  protected Class<RESULT> getResultingClass() {
+  Class<RESULT> getResultingClass() {
     return this.resultingClass;
   }
 
-  protected HttpURLConnection connectTo(String uri) throws IOException {
+  HttpURLConnection connectTo(String uri) throws IOException {
     URL urlObject = null;
     urlObject = new URL(uri);
     log.debug("Opening connection to {}", uri);

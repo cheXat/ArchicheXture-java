@@ -15,7 +15,7 @@ import javax.ws.rs.Path;
  * GET:/users/{id} will return the {@link ExampleUser} with the given id
  * DELETE:/users/{id} will delete the {@link ExampleUser} with the given id
  *
- * Additionally, {@link at.chex.archichexture.extension.repository.UserRepository} provides methods for userhandling and passwords:
+ * Additionally, {@link at.chex.archichexture.extension.repository.UserRepository} provides methods for user handling and passwords:
  * GET:/users/login with x-www-form-urlencoded username and password will return that user alongside a valid access-token, if exists
  * GET:/users/self?token={access-token} will return the {@link ExampleUser} with the given access-token
  *

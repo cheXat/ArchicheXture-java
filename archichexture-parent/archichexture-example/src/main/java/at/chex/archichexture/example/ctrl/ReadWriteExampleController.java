@@ -26,7 +26,7 @@ public class ReadWriteExampleController extends TokenBaseRestController<Example>
   private ExampleRepository exampleRepository;
 
   /**
-   * Initialize the controller with a "always true" condition. This way, we avoid the tokencheck completely.
+   * Initialize the controller with a "always true" condition. This way, we avoid the token check completely.
    */
   @PostConstruct
   public void init() {

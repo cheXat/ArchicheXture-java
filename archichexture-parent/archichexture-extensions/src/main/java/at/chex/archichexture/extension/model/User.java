@@ -20,12 +20,12 @@ import javax.persistence.TemporalType;
 @MappedSuperclass
 public abstract class User extends BaseEntity {
 
-  public static final String FIELDNAME_TOKEN = "token";
-  public static final String FIELDNAME_USERNAME = "username";
+  public static final String FIELD_NAME_TOKEN = "token";
+  public static final String FIELD_NAME_USERNAME = "username";
 
-  @Aspect(filterable = false, modifieable = false, strict = true)
+  @Aspect(filterable = false, modifiable = false, strict = true)
   @Exposed
-  @Column(name = FIELDNAME_TOKEN)
+  @Column(name = FIELD_NAME_TOKEN)
   private String token;
   @Aspect
   @Exposed
@@ -34,7 +34,7 @@ public abstract class User extends BaseEntity {
   private Date tokenIssuingDate;
   @Aspect
   @Exposed
-  @Column(name = FIELDNAME_USERNAME)
+  @Column(name = FIELD_NAME_USERNAME)
   @AlternativeNames({"user_name"})
   private String username;
   @Exposed(exposure = Visibility.HIDDEN)
@@ -53,6 +53,7 @@ public abstract class User extends BaseEntity {
     this.token = token;
   }
 
+  @SuppressWarnings("unused")
   public Date getTokenIssuingDate() {
     return tokenIssuingDate;
   }
@@ -61,10 +62,12 @@ public abstract class User extends BaseEntity {
     this.tokenIssuingDate = tokenIssuingDate;
   }
 
+  @SuppressWarnings("unused")
   public String getUsername() {
     return username;
   }
 
+  @SuppressWarnings("unused")
   public void setUsername(String username) {
     this.username = username;
   }

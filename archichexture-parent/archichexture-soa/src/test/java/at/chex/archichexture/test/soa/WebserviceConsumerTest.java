@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 public class WebserviceConsumerTest {
 
-  private Logger log = LoggerFactory.getLogger(WebserviceConsumerTest.class);
+  private static final Logger log = LoggerFactory.getLogger(WebserviceConsumerTest.class);
 
   @Test
   public void consumeMyIpJsonTest() {

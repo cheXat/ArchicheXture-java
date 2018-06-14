@@ -8,7 +8,7 @@ import javax.inject.Inject;
 import javax.ws.rs.Path;
 
 /**
- * This is an example readonly Controller. Try with these requests to see how everything works (after generating the datamodel):
+ * This is an example readonly Controller. Try with these requests to see how everything works (after generating the data model):
  *
  * bla/blub/blubber is case insensitive wildcard enabled. You can filter via percentage
  * http://localhost:8080/archichexture-example/read-example?bla=%25cd%25&_order_by=id&_order_dir=desc

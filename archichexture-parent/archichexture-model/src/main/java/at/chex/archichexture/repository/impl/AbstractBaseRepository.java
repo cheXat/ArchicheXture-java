@@ -130,11 +130,14 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
       log.debug("Returning active Query Predicate on Field {}", fieldFromEntity);
       Method method = Reflection
           .getMethodByReflection(fieldFromEntity, METHOD_EQUALS, Boolean.class);
-      return (Predicate) method.invoke(fieldFromEntity, Boolean.valueOf(activeState));
+      if (null != method) {
+        return (Predicate) method.invoke(fieldFromEntity, Boolean.valueOf(activeState));
+      }
     } catch (NoSuchFieldException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-      log.debug("Returning always-true predicate");
-      return new BooleanBuilder();
+      log.trace(e.getLocalizedMessage(), e);
     }
+    log.debug("Returning always-true predicate");
+    return new BooleanBuilder();
   }
 
   /**
@@ -386,17 +389,22 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
 
               Method method = Reflection
                   .getMethodByReflection(fieldFromEntity, methodToInvoke, field.getType());
-
-              for (String value : valuesForKeys) {
-                //(field.getType()) value;
-                Object invocationResult = Reflection
-                    .invokeMethodWithCorrectArgumentsType(fieldFromEntity, method, field.getType(),
-                        value);
-                if (invocationResult instanceof Predicate) {
-                  predicateList.add((Predicate) invocationResult);
-                } else {
-                  log.error("Invocation Result was NOT a Predicate: {}", invocationResult);
+              if (null != method) {
+                for (String value : valuesForKeys) {
+                  //(field.getType()) value;
+                  Object invocationResult = Reflection
+                      .invokeMethodWithCorrectArgumentsType(fieldFromEntity, method,
+                          field.getType(),
+                          value);
+                  if (invocationResult instanceof Predicate) {
+                    predicateList.add((Predicate) invocationResult);
+                  } else {
+                    log.error("Invocation Result was NOT a Predicate: {}", invocationResult);
+                  }
                 }
+              } else {
+                log.debug("Unable to find method {} in class {}", methodToInvoke,
+                    clazz.getSimpleName());
               }
             } catch (IllegalAccessException e) {
               log.error("Field <{}> of Class <{}> cannot be accessed by reflection!", name,
@@ -439,7 +447,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
   /**
    * Override this if you always want all values (no limits)
    */
-  @SuppressWarnings("WeakerAccess")
+  @SuppressWarnings({"WeakerAccess", "SameReturnValue"})
   protected boolean canBeLimited() {
     return true;
   }

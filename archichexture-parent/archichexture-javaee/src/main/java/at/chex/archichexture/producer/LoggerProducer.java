@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
  * @author Jakob Galbavy {@literal jg@chex.at}
  * @since 12.06.18
  */
+@SuppressWarnings({"unused", "WeakerAccess"})
 public class LoggerProducer {
 
   @Produces

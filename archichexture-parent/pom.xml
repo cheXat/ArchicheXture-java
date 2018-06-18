@@ -23,18 +23,17 @@
 
     <!-- Java-EE Libraries version definition -->
     <version.inject>1</version.inject>
-    <version.persistence-api>1.0.2</version.persistence-api>
-    <version.rs-api>2.1-m05</version.rs-api>
+    <version.persistence-api>2.2</version.persistence-api>
+    <version.rs-api>2.1</version.rs-api>
 
     <!-- Logging -->
     <version.slf4j>1.7.25</version.slf4j>
 
     <!-- 3rd Party Database support library -->
     <version.cdi>1.2</version.cdi>
-    <version.gson>2.8.0</version.gson>
     <version.guava>25.1-jre</version.guava>
+    <version.gson>2.8.0</version.gson>
     <version.owner>1.0.9</version.owner>
-    <version.persistence-api>2.2</version.persistence-api>
     <version.querydsl>4.2.1</version.querydsl>
 
     <!-- TEST Stuff -->

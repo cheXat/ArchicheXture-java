@@ -17,7 +17,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,13 +120,13 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity> extends
   @Path("/")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public Response executePUTRequest(
+  public ENTITY executePUTRequest(
       ENTITY formParam,
       @QueryParam(value = "reset_token") @DefaultValue("true") boolean resetTokenTimes,
       @QueryParam(value = "token") String token) {
     if (this.isReadonlyController()) {
       log.warn("Tried to PUT on a readonly controller!");
-      return Response.status(Response.Status.BAD_REQUEST).build();
+      throw new WebApplicationException(HttpURLConnection.HTTP_FORBIDDEN);
     }
     log.trace("PUT:/ (create) with Parameters. dto:{}, reset_token:{}, token:{}", formParam,
         resetTokenTimes, token);

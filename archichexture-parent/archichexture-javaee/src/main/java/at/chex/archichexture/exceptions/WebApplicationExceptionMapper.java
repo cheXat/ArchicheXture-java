@@ -1,0 +1,30 @@
+package at.chex.archichexture.exceptions;
+
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.Provider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * @author cheX GmbH Austria {@literal chex@chex.at}
+ * @author Jakob Galbavy {@literal jg@chex.at}
+ * @since 19.06.18
+ */
+@Provider
+public class WebApplicationExceptionMapper implements ExceptionMapper<WebApplicationException> {
+
+  private Logger log = LoggerFactory.getLogger(WebApplicationExceptionMapper.class);
+
+  @Override
+  public Response toResponse(WebApplicationException webApplicationException) {
+    int status = webApplicationException.getResponse().getStatus();
+    if (status >= 400 && status < 500) {
+      log.warn("Returning Error ({}): {}", status, webApplicationException.getLocalizedMessage());
+    } else {
+      log.error("Exception in Webservice {}", status, webApplicationException);
+    }
+    return webApplicationException.getResponse();
+  }
+}

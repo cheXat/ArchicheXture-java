@@ -12,7 +12,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,16 +36,14 @@ public abstract class BaseRestController<ENTITY extends BaseEntity>
    */
   @SuppressWarnings("WeakerAccess")
   @Nonnull
-  protected Response internalExecutePUTRequest(@Nonnull ENTITY formParam) {
+  protected ENTITY internalExecutePUTRequest(@Nonnull ENTITY formParam) {
     log.debug("Create new entity for {}", formParam);
     try {
       ENTITY entity = updateOrCreateEntityFromParameters(formParam, createNewEntity());
       log.info("Successfully created {}", entity);
-      return Response.ok(
-          entity)
-          .build();
+      return entity;
     } catch (IllegalArgumentException ex) {
-      return Response.status(Response.Status.EXPECTATION_FAILED).build();
+      throw new WebApplicationException(HttpURLConnection.HTTP_BAD_REQUEST);
     }
   }
 

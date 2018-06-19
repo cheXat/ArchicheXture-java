@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 public abstract class TokenBaseRestController<ENTITY extends BaseEntity> extends
     BaseRestController<ENTITY> {
 
-  private static final Logger log = LoggerFactory.getLogger(BaseRestController.class);
+  private static final Logger log = LoggerFactory.getLogger(TokenBaseRestController.class);
   private TokenCheck tokenCheck = (token, resetTokenExpiration) -> true;
   private boolean readonlyController = true;
 

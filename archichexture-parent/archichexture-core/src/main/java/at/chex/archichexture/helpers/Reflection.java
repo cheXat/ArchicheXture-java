@@ -19,6 +19,8 @@ import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author cheX GmbH Austria {@literal chex@chex.at}
@@ -26,6 +28,8 @@ import javax.annotation.Nullable;
  * @since 04.01.18
  */
 public class Reflection {
+
+  private static final Logger log = LoggerFactory.getLogger(Reflection.class);
 
   private Reflection() {
   }
@@ -124,6 +128,11 @@ public class Reflection {
   @SuppressWarnings("WeakerAccess")
   @Nonnull
   public static <TYPE> TYPE transferValuesFromLeftToRight(Object left, TYPE right) {
+    if (null == left || null == right) {
+      log.warn("Object NULL at transferValuesFromLeftToRight! left:{}, right:{}", left, right);
+      throw new NullPointerException();
+    }
+
     Class<?> classToWorkWith = right.getClass();
     // loop through the class hierarchy
     do {
@@ -207,6 +216,11 @@ public class Reflection {
   @SuppressWarnings("WeakerAccess")
   @Nonnull
   public static <TYPE> JsonObject transferValuesToJson(TYPE left, JsonObject jsonObject) {
+    if (null == left || null == jsonObject) {
+      log.warn("Object NULL at transferValuesToJson! left:{}, jsonObject:{}", left, jsonObject);
+      throw new NullPointerException();
+    }
+
     Class<?> classToWorkWith = left.getClass();
     // loop through the class hierarchy
     do {

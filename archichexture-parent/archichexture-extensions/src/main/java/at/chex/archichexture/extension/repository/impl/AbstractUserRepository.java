@@ -185,4 +185,18 @@ public abstract class AbstractUserRepository<USER extends User> extends
     }
     return builder.toString();
   }
+
+  @Override
+  public USER create() {
+    USER user = super.create();
+    if (Strings.isNullOrEmpty(user.getToken())) {
+      String token;
+      do {
+        token = generateToken();
+      } while (tokenExists(token));
+      user.setToken(token);
+      user.setTokenIssuingDate(new Date());
+    }
+    return user;
+  }
 }

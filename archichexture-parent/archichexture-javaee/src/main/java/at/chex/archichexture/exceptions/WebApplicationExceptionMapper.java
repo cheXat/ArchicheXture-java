@@ -1,11 +1,11 @@
 package at.chex.archichexture.exceptions;
 
+import javax.inject.Inject;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author cheX GmbH Austria {@literal chex@chex.at}
@@ -15,7 +15,8 @@ import org.slf4j.LoggerFactory;
 @Provider
 public class WebApplicationExceptionMapper implements ExceptionMapper<WebApplicationException> {
 
-  private Logger log = LoggerFactory.getLogger(WebApplicationExceptionMapper.class);
+  @Inject
+  private Logger log;
 
   @Override
   public Response toResponse(WebApplicationException webApplicationException) {

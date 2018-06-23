@@ -6,6 +6,8 @@ import at.chex.archichexture.annotation.Aspect;
 import at.chex.archichexture.annotation.Exposed;
 import at.chex.archichexture.annotation.Exposed.Exposure;
 import at.chex.archichexture.annotation.Exposed.Visibility;
+import at.chex.archichexture.annotation.Serialized;
+import at.chex.archichexture.annotation.Serialized.ExposureType;
 import com.google.common.base.Strings;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -213,6 +215,9 @@ public class Reflection {
     return null;
   }
 
+  /**
+   * Transfer all correctly annotated values from left to the given {@link JsonObject}
+   */
   @SuppressWarnings("WeakerAccess")
   @Nonnull
   public static <TYPE> JsonObject transferValuesToJson(TYPE left, JsonObject jsonObject) {
@@ -222,6 +227,11 @@ public class Reflection {
     }
 
     Class<?> classToWorkWith = left.getClass();
+    Serialized serializedClassAnnotation = getAnnotation(classToWorkWith, Serialized.class);
+    if (null == serializedClassAnnotation) {
+      throw new RuntimeException("Cannot serialize Class without Serialized Annotation present!");
+    }
+
     // loop through the class hierarchy
     do {
       // loop through all fields on the target class
@@ -234,13 +244,15 @@ public class Reflection {
             String keyName = fieldToSetOnEntity.getName();
             boolean exportIfEmpty = false;
             Exposure exposure = Exposure.OBJECT;
+            boolean exposureNameOverridden = false;
             if (fieldToSetOnEntity.isAnnotationPresent(Exposed.class)) {
-              Exposed annotation = fieldToSetOnEntity.getAnnotation(Exposed.class);
-              if (!Strings.isNullOrEmpty(annotation.exposedName())) {
-                keyName = annotation.exposedName();
+              Exposed exposed = fieldToSetOnEntity.getAnnotation(Exposed.class);
+              if (!Strings.isNullOrEmpty(exposed.exposedName())) {
+                keyName = exposed.exposedName();
+                exposureNameOverridden = true;
               }
-              exportIfEmpty = annotation.exposeIfEmpty();
-              exposure = annotation.exposeAs();
+              exportIfEmpty = exposed.exposeIfEmpty();
+              exposure = exposed.exposeAs();
             }
 
             try {
@@ -248,9 +260,23 @@ public class Reflection {
               Object object = fieldToSetOnEntity.get(left);
               if (null != object) {
                 if (object instanceof HasId) { // if this is an object, we can actually handle. All ArchicheXture Entities inherit HasId anyway
-                  if (exposure.equals(Exposure.ID)) {
-                    jsonObject.addProperty(keyName, ((HasId) object).getId());
-                  } else {
+                  if (exposure.equals(Exposure.ID) || (
+                      exposure.equals(Exposure.DEFAULT) &&
+                          (ExposureType.ID.equals(serializedClassAnnotation.exposeNested()) ||
+                              ExposureType.BOTH.equals(serializedClassAnnotation.exposeNested()))
+                  )) {
+                    // only append "_id" if the name is not overridden OR if both (id AND object) are exposed
+                    String keyNameToSet = exposureNameOverridden && !ExposureType.BOTH
+                        .equals(serializedClassAnnotation.exposeNested()) ? keyName
+                        : keyName + serializedClassAnnotation.idAppendix();
+                    jsonObject.addProperty(keyNameToSet,
+                        ((HasId) object).getId());
+                  }
+                  if (exposure.equals(Exposure.OBJECT) || (
+                      exposure.equals(Exposure.DEFAULT) &&
+                          (ExposureType.FULL.equals(serializedClassAnnotation.exposeNested()) ||
+                              ExposureType.BOTH.equals(serializedClassAnnotation.exposeNested()))
+                  )) {
                     jsonObject.add(keyName,
                         transferValuesToJson(fieldToSetOnEntity.getType().cast(object),
                             new JsonObject()));
@@ -283,5 +309,29 @@ public class Reflection {
       }
     } while (null != (classToWorkWith = classToWorkWith.getSuperclass()));
     return jsonObject;
+  }
+
+  /**
+   * Search the whole inheritance Tree (classes and interfaces) of the given {@link Class} for the given {@link Annotation}
+   */
+  @SuppressWarnings("WeakerAccess")
+  public static boolean isAnnotationPresent(@Nonnull Class<?> clazz,
+      @Nonnull Class<? extends Annotation> annotation) {
+    return null != getAnnotation(clazz, annotation);
+  }
+
+  private static <T extends Annotation> T getAnnotation(Class<?> clazz, Class<T> annotation) {
+    Class<?> classToWorkWith = clazz;
+    do {
+      if (classToWorkWith.isAnnotationPresent(annotation)) {
+        return classToWorkWith.getAnnotation(annotation);
+      }
+      for (Class<?> ifc : classToWorkWith.getInterfaces()) {
+        if (isAnnotationPresent(ifc, annotation)) {
+          return ifc.getAnnotation(annotation);
+        }
+      }
+    } while (null != (classToWorkWith = classToWorkWith.getSuperclass()));
+    return null;
   }
 }

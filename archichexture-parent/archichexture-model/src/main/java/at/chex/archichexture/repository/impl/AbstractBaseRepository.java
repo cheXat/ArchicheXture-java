@@ -3,6 +3,7 @@ package at.chex.archichexture.repository.impl;
 import at.chex.archichexture.Deactivatable;
 import at.chex.archichexture.annotation.AlternativeNames;
 import at.chex.archichexture.annotation.Aspect;
+import at.chex.archichexture.annotation.Exposed;
 import at.chex.archichexture.annotation.RemoveOnDelete;
 import at.chex.archichexture.helpers.Reflection;
 import at.chex.archichexture.helpers.Values;
@@ -247,7 +248,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
     return list;
   }
 
-  private <T> boolean arrayContainsValue(T[] array, T value) {
+  private <T> boolean arrayContainsValue(List<T> array, T value) {
     if (null == value) {
       return false;
     }
@@ -299,10 +300,16 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
         Aspect aspect = field.getAnnotation(Aspect.class);
         log.trace("Processing aspect (sort) for Field:{}", field);
 
-        String[] filterNames = new String[0];
+        List<String> filterNames = new ArrayList<>();
         if (field.isAnnotationPresent(AlternativeNames.class)) {
           AlternativeNames alternativeNames = field.getAnnotation(AlternativeNames.class);
-          filterNames = alternativeNames.value();
+          filterNames.addAll(Arrays.asList(alternativeNames.value()));
+        }
+        if (field.isAnnotationPresent(Exposed.class)) {
+          Exposed exposed = field.getAnnotation(Exposed.class);
+          if (!Strings.isNullOrEmpty(exposed.exposedName())) {
+            filterNames.add(exposed.exposedName());
+          }
         }
 
         if (aspect.filterable() && (field.getName().equals(value) || arrayContainsValue(

@@ -1,5 +1,6 @@
 package at.chex.archichexture.message;
 
+import at.chex.archichexture.annotation.Serialized;
 import at.chex.archichexture.helpers.Reflection;
 import at.chex.archichexture.model.BaseEntity;
 import com.google.common.base.Charsets;
@@ -43,9 +44,7 @@ public class JsonMessageBodyHandler<TYPE extends BaseEntity> implements MessageB
   @Override
   public boolean isReadable(Class aClass, Type type,
       Annotation[] annotations, MediaType mediaType) {
-    boolean instance = BaseEntity.class.isAssignableFrom(aClass);
-    log.debug("{}Reading Class of type {}", instance ? "" : "NOT ", aClass);
-    return instance;
+    return Reflection.isAnnotationPresent(aClass, Serialized.class);
   }
 
   @Override
@@ -73,7 +72,7 @@ public class JsonMessageBodyHandler<TYPE extends BaseEntity> implements MessageB
   @Override
   public boolean isWriteable(Class<?> aClass, Type type, Annotation[] annotations,
       MediaType mediaType) {
-    return BaseEntity.class.isAssignableFrom(aClass);
+    return Reflection.isAnnotationPresent(aClass, Serialized.class);
   }
 
   @Override

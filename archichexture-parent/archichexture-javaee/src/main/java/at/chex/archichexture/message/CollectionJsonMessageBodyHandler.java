@@ -1,5 +1,6 @@
 package at.chex.archichexture.message;
 
+import at.chex.archichexture.annotation.Serialized;
 import at.chex.archichexture.helpers.Reflection;
 import at.chex.archichexture.model.BaseEntity;
 import com.google.gson.Gson;
@@ -40,7 +41,9 @@ public class CollectionJsonMessageBodyHandler<TYPE extends BaseEntity> implement
     try {
       if (type instanceof ParameterizedType) {
         Type[] actualTypeArguments = ((ParameterizedType) type).getActualTypeArguments();
-        return BaseEntity.class.isAssignableFrom((Class) actualTypeArguments[0]);
+        return Reflection.isAnnotationPresent(((Class) actualTypeArguments[0]), Serialized.class);
+
+        //return BaseEntity.class.isAssignableFrom((Class) actualTypeArguments[0]);
       }
     } catch (Exception ex) {
       // do nothing

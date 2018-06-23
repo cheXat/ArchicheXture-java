@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
  * @author Jakob Galbavy {@literal jg@chex.at}
  * @since 31.01.18
  */
-@Target({ElementType.FIELD, ElementType.LOCAL_VARIABLE})
+@Target({ElementType.FIELD, ElementType.LOCAL_VARIABLE, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Exposed {
 
@@ -36,9 +36,13 @@ public @interface Exposed {
   /**
    * Select how you want this aspect (object instanceof {@link at.chex.archichexture.HasId}) to be serialized
    */
-  Exposure exposeAs() default Exposure.OBJECT;
+  Exposure exposeAs() default Exposure.DEFAULT;
 
   enum Exposure {
+    /**
+     * The {@link Aspect} will be serialized, as configured by the {@link Serialized} annotation
+     */
+    DEFAULT,
     /**
      * ArchicheXture will export the complete object
      */

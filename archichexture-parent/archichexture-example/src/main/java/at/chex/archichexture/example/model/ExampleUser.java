@@ -3,7 +3,6 @@ package at.chex.archichexture.example.model;
 import at.chex.archichexture.annotation.AlternativeNames;
 import at.chex.archichexture.annotation.Aspect;
 import at.chex.archichexture.annotation.Exposed;
-import at.chex.archichexture.annotation.Exposed.Exposure;
 import at.chex.archichexture.extension.model.User;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -47,7 +46,7 @@ public class ExampleUser extends User {
   @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
   @JoinColumn(name = "example")
   @Aspect
-  @Exposed(exposeAs = Exposure.ID)
+  @Exposed
   private Example example;
 
   public String getFirstname() {

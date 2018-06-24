@@ -55,6 +55,12 @@ public interface BaseRepository<ENTITY extends BaseEntity> extends
   boolean delete(ENTITY entity);
 
   /**
+   * Returns the {@link Class}, this {@link BaseRepository} is managing
+   */
+  @SuppressWarnings({"unchecked", "WeakerAccess"})
+  Class<ENTITY> getEntityClass();
+
+  /**
    * Create a new instance of {@link ENTITY}
    */
   ENTITY create();

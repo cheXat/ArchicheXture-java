@@ -7,6 +7,8 @@ package at.chex.archichexture;
  */
 public interface HasId {
 
+  String FIELD_NAME_ID = "id";
+
   @SuppressWarnings("unused")
   Long getId();
 

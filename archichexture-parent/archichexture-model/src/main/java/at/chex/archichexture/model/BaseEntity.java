@@ -28,8 +28,6 @@ import javax.xml.bind.annotation.XmlElement;
 @MappedSuperclass
 public abstract class BaseEntity implements HasId, Serializable {
 
-  @SuppressWarnings({"WeakerAccess", "unused"})
-  public static final String FIELD_NAME_ID = "id";
   private static final long serialVersionUID = 1L;
   /**
    * We expect, the database takes care about generating the primary key. Of course, you can

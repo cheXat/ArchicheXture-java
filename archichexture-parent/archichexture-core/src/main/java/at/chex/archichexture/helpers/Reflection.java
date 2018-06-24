@@ -41,13 +41,41 @@ public class Reflection {
    */
   @SuppressWarnings({"WeakerAccess", "unused"})
   @Nonnull
+  public static List<Field> getFieldsWithInterface(@Nonnull Class<?> iface,
+      @Nonnull Class<?> clazz) {
+    List<Field> returnList = new ArrayList<>();
+
+    Class<?> classToWorkWith = clazz;
+    do {
+      returnList.addAll(innerGetFieldsWithInterface(iface, classToWorkWith));
+    } while (null != (classToWorkWith = classToWorkWith.getSuperclass()));
+
+    return returnList;
+  }
+
+  private static List<Field> innerGetFieldsWithInterface(Class<?> iface,
+      Class<?> clazz) {
+    List<Field> returnList = new ArrayList<>();
+    for (Field field : clazz.getDeclaredFields()) {
+      if (iface.isAssignableFrom(field.getType())) {
+        returnList.add(field);
+      }
+    }
+    return returnList;
+  }
+
+  /**
+   * Will return the method with the given name in the given object and its inherited classes
+   */
+  @SuppressWarnings({"WeakerAccess", "unused"})
+  @Nonnull
   public static List<Field> getAnnotatedFields(Class<? extends Annotation> annotation,
       Class<?> clazz) {
     List<Field> returnList = new ArrayList<>();
 
     Class<?> classToWorkWith = clazz;
     do {
-      returnList.addAll(innerGetAnnotatedFields(annotation, clazz));
+      returnList.addAll(innerGetAnnotatedFields(annotation, classToWorkWith));
     } while (null != (classToWorkWith = classToWorkWith.getSuperclass()));
 
     return returnList;
@@ -129,13 +157,20 @@ public class Reflection {
    */
   @SuppressWarnings("WeakerAccess")
   @Nonnull
-  public static <TYPE> TYPE transferValuesFromLeftToRight(Object left, TYPE right) {
+  public static <TYPE> TYPE transferValuesFromLeftToRight(Object left,
+      TYPE right) {
     if (null == left || null == right) {
       log.warn("Object NULL at transferValuesFromLeftToRight! left:{}, right:{}", left, right);
       throw new NullPointerException();
     }
 
     Class<?> classToWorkWith = right.getClass();
+
+    Serialized serializedClassAnnotation = getAnnotation(classToWorkWith, Serialized.class);
+    if (null == serializedClassAnnotation) {
+      throw new RuntimeException("Cannot serialize Class without Serialized Annotation present!");
+    }
+
     // loop through the class hierarchy
     do {
 
@@ -145,9 +180,11 @@ public class Reflection {
         // check for @Aspect annotations
         if (fieldToSetOnEntity.isAnnotationPresent(Aspect.class)) {
           Aspect aspect = fieldToSetOnEntity.getAnnotation(Aspect.class);
-          if (aspect.modifiable()) {
+          if (aspect.modifiable() ||
+              HasId.FIELD_NAME_ID.equals(fieldToSetOnEntity.getName())) {
             List<String> filterNames = new ArrayList<>();
             filterNames.add(fieldToSetOnEntity.getName());
+            filterNames.add(fieldToSetOnEntity.getName() + serializedClassAnnotation.idAppendix());
 
             // check for any @AlternativeNames given to this field (and try to find it in the source class)
             if (fieldToSetOnEntity.isAnnotationPresent(AlternativeNames.class)) {
@@ -156,22 +193,65 @@ public class Reflection {
               filterNames.addAll(Arrays.asList(alternativeNames.value()));
             }
 
+            if (fieldToSetOnEntity.isAnnotationPresent(Exposed.class)) {
+              Exposed exposed = fieldToSetOnEntity.getAnnotation(Exposed.class);
+              if (!Strings.isNullOrEmpty(exposed.exposedName())) {
+                filterNames.add(exposed.exposedName());
+                filterNames.add(exposed.exposedName() + serializedClassAnnotation.idAppendix());
+              }
+            }
+
             // we need to use another accessor for a jsonObject
             if (left instanceof JsonObject) {
               JsonObject jsonObject = (JsonObject) left;
-              String elementValue = getJsonElementByNameList(jsonObject, filterNames);
-              if (!Strings.isNullOrEmpty(elementValue)) {
-                try {
-                  fieldToSetOnEntity.setAccessible(true);
-                  if (!fieldToSetOnEntity.getType().equals(String.class)) {
-                    Object convertedValue = Values
-                        .convert(elementValue, fieldToSetOnEntity.getType());
-                    fieldToSetOnEntity.set(right, convertedValue);
-                  } else {
-                    fieldToSetOnEntity.set(right, elementValue);
+              JsonResult jsonResult = getJsonElementByNameList(jsonObject, filterNames);
+              if (null != jsonResult) {
+                if (jsonResult.element.isJsonPrimitive()) {
+                  String elementValue = jsonResult.element.getAsString();
+                  if (!Strings.isNullOrEmpty(elementValue)) {
+                    try {
+                      fieldToSetOnEntity.setAccessible(true);
+                      if (!fieldToSetOnEntity.getType().equals(String.class)) {
+                        try {
+                          Object convertedValue = Values
+                              .convert(elementValue, fieldToSetOnEntity.getType());
+                          fieldToSetOnEntity.set(right, convertedValue);
+                        } catch (RuntimeException ex) {
+                          log.debug(ex.getLocalizedMessage());
+                          // not a primitive
+                          Long longValue = Values.convert(elementValue, Long.class);
+                          if (longValue > 0 && HasId.class
+                              .isAssignableFrom(fieldToSetOnEntity.getType())) {
+                            Object obj = fieldToSetOnEntity.get(right);
+                            if (null == obj) {
+                              obj = fieldToSetOnEntity.getType().newInstance();
+                              fieldToSetOnEntity.set(right, obj);
+                            }
+                            ((HasId) obj).setId(longValue);
+                          }
+                        }
+                      } else {
+                        fieldToSetOnEntity.set(right, elementValue);
+                      }
+                    } catch (IllegalAccessException | RuntimeException | InstantiationException e) {
+                      // do nothing
+                    }
                   }
-                } catch (IllegalAccessException e) {
-                  // do nothing
+                } else if (jsonResult.element.isJsonArray()) {
+                  log.warn("Unable to process update on Array of jsonObjects yet");
+                } else if (jsonResult.element.isJsonObject()) {
+                  log.debug("{} is object", jsonResult.key);
+                  try {
+                    fieldToSetOnEntity.setAccessible(true);
+                    Object obj = fieldToSetOnEntity.get(right);
+                    if (null == obj) {
+                      obj = fieldToSetOnEntity.getType().newInstance();
+                      fieldToSetOnEntity.set(right, obj);
+                    }
+                    Reflection.transferValuesFromLeftToRight(jsonResult.element, obj);
+                  } catch (IllegalAccessException | RuntimeException | InstantiationException ex) {
+                    log.debug(ex.getLocalizedMessage());
+                  }
                 }
               }
             } else {
@@ -205,11 +285,12 @@ public class Reflection {
     return right;
   }
 
-  private static String getJsonElementByNameList(JsonObject jsonObject, List<String> nameList) {
+  private static JsonResult getJsonElementByNameList(JsonObject jsonObject,
+      List<String> nameList) {
     for (String name : nameList) {
       JsonElement jsonElement = jsonObject.get(name);
       if (null != jsonElement) {
-        return jsonElement.getAsString();
+        return new JsonResult(name, jsonElement);
       }
     }
     return null;
@@ -333,5 +414,32 @@ public class Reflection {
       }
     } while (null != (classToWorkWith = classToWorkWith.getSuperclass()));
     return null;
+  }
+
+  private static class JsonResult {
+
+    private String key;
+    private JsonElement element;
+
+    JsonResult(String key, JsonElement element) {
+      this.key = key;
+      this.element = element;
+    }
+
+    public String getKey() {
+      return key;
+    }
+
+    public void setKey(String key) {
+      this.key = key;
+    }
+
+    public JsonElement getElement() {
+      return element;
+    }
+
+    public void setElement(JsonElement element) {
+      this.element = element;
+    }
   }
 }

@@ -88,4 +88,16 @@ public class ExampleUser extends User {
   public void setExample(Example example) {
     this.example = example;
   }
+
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder("ExampleUser{");
+    sb.append("firstname='").append(firstname).append('\'');
+    sb.append(", lastname='").append(lastname).append('\'');
+    sb.append(", email='").append(email).append('\'');
+    sb.append(", telephone='").append(telephone).append('\'');
+    sb.append(", example=").append(example);
+    sb.append('}');
+    return sb.toString();
+  }
 }

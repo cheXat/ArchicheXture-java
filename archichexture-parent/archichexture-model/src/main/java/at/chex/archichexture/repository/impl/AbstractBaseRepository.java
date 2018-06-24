@@ -117,8 +117,9 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
    */
   protected abstract EntityManager getEntityManager();
 
-  @SuppressWarnings("unchecked")
-  private Class<ENTITY> getEntityClass() {
+  @Override
+  @SuppressWarnings({"unchecked", "WeakerAccess"})
+  public Class<ENTITY> getEntityClass() {
     return (Class<ENTITY>) typeToken.getRawType();
   }
 
@@ -613,16 +614,6 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
       log.debug("Save called for NULL entity");
       return null;
     }
-
-    /*if (entity instanceof DocumentedEntity) {
-      if (null == ((DocumentedEntity) entity).getCreatedAt()) {
-        ((DocumentedEntity) entity).setCreatedAt(new Date());
-      }
-      if (null == ((DocumentedEntity) entity).getActive()) {
-        ((DocumentedEntity) entity).setActive(true);
-      }
-      ((DocumentedEntity) entity).setUpdatedAt(new Date());
-    }*/
 
     log.trace("Save called for entity {}", entity);
     EntityManager entityManager = getEntityManager();

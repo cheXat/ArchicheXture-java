@@ -53,4 +53,13 @@ public class Example extends DateExample {
     this.blub = blub;
   }
 
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder("Example{");
+    sb.append("whatever='").append(whatever).append('\'');
+    sb.append(", blub='").append(blub).append('\'');
+    sb.append(", hiddenField='").append(hiddenField).append('\'');
+    sb.append('}');
+    return sb.toString();
+  }
 }

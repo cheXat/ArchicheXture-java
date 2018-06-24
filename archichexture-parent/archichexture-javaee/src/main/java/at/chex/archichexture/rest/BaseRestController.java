@@ -3,6 +3,7 @@ package at.chex.archichexture.rest;
 import at.chex.archichexture.helpers.Reflection;
 import at.chex.archichexture.model.BaseEntity;
 import at.chex.archichexture.repository.BaseRepository;
+import at.chex.archichexture.service.TransferEntitiesService;
 import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
@@ -31,6 +33,9 @@ public abstract class BaseRestController<ENTITY extends BaseEntity>
   private static final long serialVersionUID = 1L;
   private static final Logger log = LoggerFactory.getLogger(BaseRestController.class);
 
+  @Inject
+  private TransferEntitiesService transferEntitiesService;
+
   /**
    * Execute PUT
    */
@@ -50,19 +55,21 @@ public abstract class BaseRestController<ENTITY extends BaseEntity>
   @Nonnull
   private ENTITY updateOrCreateEntityFromParameters(
       @Nonnull ENTITY formObject, @Nonnull ENTITY entity) throws IllegalArgumentException {
-    ENTITY entityWithValues = Reflection.transferValuesFromLeftToRight(formObject, entity);
+    transferEntitiesService.transfer(formObject, entity);
+    ENTITY entityWithValues = Reflection
+        .transferValuesFromLeftToRight(formObject, entity);
     log.debug("Entity after transfer is {}", entityWithValues);
     return getEntityRepository().save(updateAdditionalParameters(formObject, entityWithValues));
   }
 
   /**
-   * Values are directly updated to the {@link ENTITY}, but if you need something additional (e.g. unwrap given ids to value objects in the {@link ENTITY}), this is the place for it.
+   * Values are directly updated from the left {@link ENTITY} to the right {@link ENTITY}, but if you need something additional (e.g. unwrap given ids to value objects in the {@link ENTITY}), this is the place for it.
    */
   @SuppressWarnings({"WeakerAccess", "unused"})
   @Nonnull
-  protected ENTITY updateAdditionalParameters(@Nonnull ENTITY ENTITY,
-      @Nonnull ENTITY entity) {
-    return entity;
+  protected ENTITY updateAdditionalParameters(@Nonnull ENTITY left,
+      @Nonnull ENTITY right) {
+    return right;
   }
 
   /**

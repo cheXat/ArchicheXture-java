@@ -5,12 +5,12 @@ import at.chex.archichexture.annotation.AlternativeNames;
 import at.chex.archichexture.annotation.Aspect;
 import at.chex.archichexture.annotation.Exposed;
 import at.chex.archichexture.annotation.RemoveOnDelete;
-import at.chex.archichexture.helpers.Reflection;
-import at.chex.archichexture.helpers.Values;
 import at.chex.archichexture.model.BaseEntity;
 import at.chex.archichexture.model.DocumentedEntity;
 import at.chex.archichexture.model.QBaseEntity;
 import at.chex.archichexture.repository.BaseRepository;
+import at.chex.archichexture.slh.Reflection;
+import at.chex.archichexture.slh.Values;
 import com.google.common.base.Strings;
 import com.google.common.reflect.TypeToken;
 import com.querydsl.core.BooleanBuilder;
@@ -89,7 +89,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
    * Create a new {@link JPAQuery} using the given {@link EntityManager}
    */
   @SuppressWarnings({"WeakerAccess", "unused"})
-  protected JPAQuery createQuery() {
+  protected JPAQuery<?> createQuery() {
     return queryFactory.query();
   }
 
@@ -308,8 +308,8 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
         }
         if (field.isAnnotationPresent(Exposed.class)) {
           Exposed exposed = field.getAnnotation(Exposed.class);
-          if (!Strings.isNullOrEmpty(exposed.exposedName())) {
-            filterNames.add(exposed.exposedName());
+          if (!Strings.isNullOrEmpty(exposed.value())) {
+            filterNames.add(exposed.value());
           }
         }
 
@@ -517,7 +517,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
    * Override this to add additional stuff to your query like sort or whatever
    */
   @SuppressWarnings("WeakerAccess")
-  protected JPAQuery addAdditionalQueryAttributes(JPAQuery query) {
+  protected <T> JPAQuery<T> addAdditionalQueryAttributes(JPAQuery<T> query) {
     return query;
   }
 
@@ -539,7 +539,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
       return returnEntity;
     }
 
-    JPAQuery query = query().selectFrom(entityPath)
+    JPAQuery<ENTITY> query = query().selectFrom(entityPath)
         .where(((QBaseEntity) entityPath).id.eq(id))
         .where(getActivePredicate(true));
 
@@ -548,7 +548,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
           .toArray(new Predicate[0]));
     }
 
-    ENTITY returnEntity = (ENTITY) query.fetchOne();
+    ENTITY returnEntity = query.fetchOne();
     log.debug("Returning entity {}", returnEntity);
 
     return returnEntity;

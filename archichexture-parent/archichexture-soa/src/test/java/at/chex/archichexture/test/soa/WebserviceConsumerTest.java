@@ -3,6 +3,7 @@ package at.chex.archichexture.test.soa;
 import at.chex.archichexture.soa.WebserviceConsumer;
 import at.chex.archichexture.test.soa.dto.IpDto;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +17,9 @@ public class WebserviceConsumerTest {
 
   private static final Logger log = LoggerFactory.getLogger(WebserviceConsumerTest.class);
 
+  // sometimes the jsontest application has a quota 503...
   @Test
+  @Ignore
   public void consumeMyIpJsonTest() {
     IpDto ip = WebserviceConsumer.callJsonService("http://ip.jsontest.com/", IpDto.class);
     Assert.assertNotNull(ip);

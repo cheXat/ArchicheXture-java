@@ -1,4 +1,4 @@
-package at.chex.archichexture.helpers.convert;
+package at.chex.archichexture.slh.convert;
 
 /**
  * @author cheX GmbH Austria {@literal chex@chex.at}

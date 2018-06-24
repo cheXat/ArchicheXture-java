@@ -1,12 +1,12 @@
-package at.chex.archichexture.helpers;
+package at.chex.archichexture.slh;
 
-import at.chex.archichexture.helpers.convert.BigDecimalConverter;
-import at.chex.archichexture.helpers.convert.BooleanConverter;
-import at.chex.archichexture.helpers.convert.Converter;
-import at.chex.archichexture.helpers.convert.DateConverter;
-import at.chex.archichexture.helpers.convert.IntegerConverter;
-import at.chex.archichexture.helpers.convert.LongConverter;
-import at.chex.archichexture.helpers.convert.StringConverter;
+import at.chex.archichexture.slh.convert.BigDecimalConverter;
+import at.chex.archichexture.slh.convert.BooleanConverter;
+import at.chex.archichexture.slh.convert.Converter;
+import at.chex.archichexture.slh.convert.DateConverter;
+import at.chex.archichexture.slh.convert.IntegerConverter;
+import at.chex.archichexture.slh.convert.LongConverter;
+import at.chex.archichexture.slh.convert.StringConverter;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collection;

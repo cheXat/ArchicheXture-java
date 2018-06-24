@@ -1,8 +1,8 @@
 package test;
 
-import at.chex.archichexture.helpers.Values;
-import at.chex.archichexture.helpers.convert.Converter;
-import at.chex.archichexture.helpers.convert.StringConverter;
+import at.chex.archichexture.slh.Values;
+import at.chex.archichexture.slh.convert.Converter;
+import at.chex.archichexture.slh.convert.StringConverter;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;

@@ -1,6 +1,6 @@
 package test;
 
-import at.chex.archichexture.helpers.Reflection;
+import at.chex.archichexture.slh.Reflection;
 import org.junit.Assert;
 import org.junit.Test;
 import test.model.ComplexClass;

@@ -1,8 +1,8 @@
 package at.chex.archichexture.message;
 
 import at.chex.archichexture.annotation.Serialized;
-import at.chex.archichexture.helpers.Reflection;
 import at.chex.archichexture.model.BaseEntity;
+import at.chex.archichexture.slh.Reflection;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;

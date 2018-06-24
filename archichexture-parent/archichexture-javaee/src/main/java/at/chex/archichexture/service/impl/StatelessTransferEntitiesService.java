@@ -1,10 +1,10 @@
 package at.chex.archichexture.service.impl;
 
 import at.chex.archichexture.HasId;
-import at.chex.archichexture.helpers.Reflection;
 import at.chex.archichexture.model.BaseEntity;
 import at.chex.archichexture.repository.BaseRepository;
 import at.chex.archichexture.service.TransferEntitiesService;
+import at.chex.archichexture.slh.Reflection;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;

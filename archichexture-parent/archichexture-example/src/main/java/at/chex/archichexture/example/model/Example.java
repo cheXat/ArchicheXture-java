@@ -23,7 +23,7 @@ public class Example extends DateExample {
   @Aspect(filterable = true, strict = true)
   @AlternativeNames({"what", "ever"})
   @Column(name = "whatever")
-  @Exposed(exposedName = "ever_what")
+  @Exposed(value = "ever_what")
   private String whatever;
 
   @Aspect

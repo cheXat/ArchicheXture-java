@@ -1,4 +1,4 @@
-package at.chex.archichexture.helpers.convert;
+package at.chex.archichexture.slh.convert;
 
 import java.util.Date;
 

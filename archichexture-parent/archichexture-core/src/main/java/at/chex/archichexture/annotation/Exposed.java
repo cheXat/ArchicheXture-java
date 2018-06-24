@@ -26,7 +26,7 @@ public @interface Exposed {
   /**
    * This will rename this aspect in exports
    */
-  String exposedName() default "";
+  String value() default "";
 
   /**
    * When set to true, this aspect will be exported even if it's empty or null

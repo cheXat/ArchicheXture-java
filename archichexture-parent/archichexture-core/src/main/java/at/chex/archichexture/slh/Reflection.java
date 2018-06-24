@@ -1,4 +1,4 @@
-package at.chex.archichexture.helpers;
+package at.chex.archichexture.slh;
 
 import at.chex.archichexture.HasId;
 import at.chex.archichexture.annotation.AlternativeNames;
@@ -195,9 +195,9 @@ public class Reflection {
 
             if (fieldToSetOnEntity.isAnnotationPresent(Exposed.class)) {
               Exposed exposed = fieldToSetOnEntity.getAnnotation(Exposed.class);
-              if (!Strings.isNullOrEmpty(exposed.exposedName())) {
-                filterNames.add(exposed.exposedName());
-                filterNames.add(exposed.exposedName() + serializedClassAnnotation.idAppendix());
+              if (!Strings.isNullOrEmpty(exposed.value())) {
+                filterNames.add(exposed.value());
+                filterNames.add(exposed.value() + serializedClassAnnotation.idAppendix());
               }
             }
 
@@ -252,9 +252,19 @@ public class Reflection {
                   } catch (IllegalAccessException | RuntimeException | InstantiationException ex) {
                     log.debug(ex.getLocalizedMessage());
                   }
+                } else if (jsonResult.element.isJsonNull()) {
+                  log.debug("delete {}", jsonResult.key);
+                  try {
+                    fieldToSetOnEntity.setAccessible(true);
+                    // FIXME mark deletion should be here.
+                    fieldToSetOnEntity.set(right, new Object());
+                  } catch (RuntimeException | IllegalAccessException ex) {
+                    log.warn(ex.getLocalizedMessage());
+                  }
                 }
               }
             } else {
+              // not a jsonObject
               Field valueFieldFromFormObject = Reflection
                   .getFieldFromClassInStringList(left.getClass(), filterNames);
 
@@ -262,6 +272,7 @@ public class Reflection {
                 try {
                   valueFieldFromFormObject.setAccessible(true);
                   Object object = valueFieldFromFormObject.get(left);
+                  // FIXME if marked for deletion, delete value here
                   fieldToSetOnEntity.setAccessible(true);
                   if (null != object) {
                     if (object.getClass().equals(String.class) &&
@@ -328,8 +339,8 @@ public class Reflection {
             boolean exposureNameOverridden = false;
             if (fieldToSetOnEntity.isAnnotationPresent(Exposed.class)) {
               Exposed exposed = fieldToSetOnEntity.getAnnotation(Exposed.class);
-              if (!Strings.isNullOrEmpty(exposed.exposedName())) {
-                keyName = exposed.exposedName();
+              if (!Strings.isNullOrEmpty(exposed.value())) {
+                keyName = exposed.value();
                 exposureNameOverridden = true;
               }
               exportIfEmpty = exposed.exposeIfEmpty();

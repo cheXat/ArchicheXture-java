@@ -58,10 +58,10 @@ public abstract class AbstractUserRepository<USER extends User> extends
     SimplePath<String> usernamePath = Expressions
         .path(String.class, getEntityPath(), User.FIELD_NAME_USERNAME);
 
-    User user = query().selectFrom(getEntityPath()).where(usernamePath.eq(username)).fetchFirst();
+    USER user = query().selectFrom(getEntityPath()).where(usernamePath.eq(username)).fetchFirst();
     log.debug("lookup customer with username:{} returned {}", username, user);
 
-    if (null == user || !validatePasswordFor((USER) user, password)) {
+    if (null == user || !validatePasswordFor(user, password)) {
       log.debug("User {} not found or password didn't match", user);
       return null;
     }

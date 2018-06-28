@@ -87,8 +87,11 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
 
   /**
    * Create a new {@link JPAQuery} using the given {@link EntityManager}
+   *
+   * @deprecated use {@link #query()} instead
    */
   @SuppressWarnings({"WeakerAccess", "unused"})
+  @Deprecated
   protected JPAQuery<?> createQuery() {
     return queryFactory.query();
   }

@@ -2,6 +2,7 @@ package at.chex.archichexture.extension.rest;
 
 import at.chex.archichexture.Defines;
 import at.chex.archichexture.extension.model.User;
+import at.chex.archichexture.extension.model.UsernameAndPassword;
 import at.chex.archichexture.extension.repository.UserRepository;
 import at.chex.archichexture.rest.TokenBaseRestController;
 import com.google.common.base.Strings;
@@ -40,11 +41,13 @@ public abstract class AbstractUserController<USER extends User> extends
   @Path("/login")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public USER loginUser(String username, String password) {
-    if (Strings.isNullOrEmpty(username) || Strings.isNullOrEmpty(password)) {
+  public USER loginUser(UsernameAndPassword usernameAndPassword) {
+    if (Strings.isNullOrEmpty(usernameAndPassword.getUsername()) || Strings
+        .isNullOrEmpty(usernameAndPassword.getPassword())) {
       throw new WebApplicationException(HttpURLConnection.HTTP_BAD_REQUEST);
     }
-    USER user = getEntityRepository().findUserBy(username, password);
+    USER user = getEntityRepository()
+        .findUserBy(usernameAndPassword.getUsername(), usernameAndPassword.getPassword());
     if (null == user) {
       throw new WebApplicationException(HttpURLConnection.HTTP_FORBIDDEN);
     }
@@ -72,17 +75,17 @@ public abstract class AbstractUserController<USER extends User> extends
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public USER resetCustomerPassword(@QueryParam(Defines.KEYWORD_TOKEN) String token,
-      String password) {
+      UsernameAndPassword usernameAndPassword) {
     USER user = getEntityRepository().findUserByToken(token);
     if (null == user) {
       throw new WebApplicationException(HttpURLConnection.HTTP_BAD_REQUEST);
     }
 
-    if (Strings.isNullOrEmpty(password)) {
+    if (Strings.isNullOrEmpty(usernameAndPassword.getPassword())) {
       throw new WebApplicationException(HttpURLConnection.HTTP_BAD_REQUEST);
     }
 
-    user = getEntityRepository().overridePasswordFor(user, password);
+    user = getEntityRepository().overridePasswordFor(user, usernameAndPassword.getPassword());
     log.info("Password change for User {} ({})!", user.getUsername(), user.getId());
     return user;
   }

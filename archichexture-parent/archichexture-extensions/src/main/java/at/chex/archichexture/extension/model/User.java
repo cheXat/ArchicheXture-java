@@ -13,6 +13,11 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 /**
+ * Be sure to add the following indexes to your {@link javax.persistence.Table} Annotation
+ *
+ *  // @Index(columnList = "token", unique = true)
+ *  // @Index(columnList = "username", unique = true)
+ *
  * @author cheX GmbH Austria {@literal chex@chex.at}
  * @author Jakob Galbavy {@literal jg@chex.at}
  * @since 12.06.18
@@ -25,7 +30,7 @@ public abstract class User extends BaseEntity {
 
   @Aspect(filterable = false, modifiable = false, strict = true)
   @Exposed
-  @Column(name = FIELD_NAME_TOKEN)
+  @Column(name = FIELD_NAME_TOKEN, unique = true)
   private String token;
   @Aspect
   @Exposed
@@ -34,7 +39,7 @@ public abstract class User extends BaseEntity {
   private Date tokenIssuingDate;
   @Aspect
   @Exposed
-  @Column(name = FIELD_NAME_USERNAME)
+  @Column(name = FIELD_NAME_USERNAME, unique = true)
   @AlternativeNames({"user_name"})
   private String username;
   @Exposed(exposure = Visibility.HIDDEN)

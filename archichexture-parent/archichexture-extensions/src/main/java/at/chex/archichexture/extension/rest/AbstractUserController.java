@@ -89,4 +89,20 @@ public abstract class AbstractUserController<USER extends User> extends
     log.info("Password change for User {} ({})!", user.getUsername(), user.getId());
     return user;
   }
+
+
+  /**
+   * Change the password of the {@link User} with the given token
+   */
+  @Path("/exists")
+  @POST
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public Boolean userWithUsernameExists(UsernameAndPassword usernameAndPassword) {
+    if (null == usernameAndPassword || Strings.isNullOrEmpty(usernameAndPassword.getUsername())) {
+      throw new WebApplicationException(HttpURLConnection.HTTP_BAD_REQUEST);
+    }
+
+    return getEntityRepository().userExists(usernameAndPassword.getUsername());
+  }
 }

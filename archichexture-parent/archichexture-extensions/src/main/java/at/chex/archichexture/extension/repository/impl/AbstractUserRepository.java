@@ -49,6 +49,19 @@ public abstract class AbstractUserRepository<USER extends User> extends
   }
 
   @Override
+  public boolean userExists(String username) {
+    if (Strings.isNullOrEmpty(username)) {
+      return false;
+    }
+
+    SimplePath<String> usernamePath = Expressions
+        .path(String.class, getEntityPath(), User.FIELD_NAME_USERNAME);
+
+    return null != query().selectFrom(getEntityPath()).where(usernamePath.eq(username))
+        .fetchFirst();
+  }
+
+  @Override
   @SuppressWarnings("unchecked")
   public USER findUserBy(String username, String password) {
     if (Strings.isNullOrEmpty(username) || Strings.isNullOrEmpty(password)) {

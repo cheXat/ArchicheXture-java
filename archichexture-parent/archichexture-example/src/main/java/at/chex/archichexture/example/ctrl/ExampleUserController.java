@@ -16,6 +16,7 @@ import javax.ws.rs.Path;
  * DELETE:/users/{id} will delete the {@link ExampleUser} with the given id
  *
  * Additionally, {@link at.chex.archichexture.extension.repository.UserRepository} provides methods for user handling and passwords:
+ * POST:/users/exists will return {@link Boolean} if the user with the given username already exists
  * GET:/users/login with x-www-form-urlencoded username and password will return that user alongside a valid access-token, if exists
  * GET:/users/self?token={access-token} will return the {@link ExampleUser} with the given access-token
  *

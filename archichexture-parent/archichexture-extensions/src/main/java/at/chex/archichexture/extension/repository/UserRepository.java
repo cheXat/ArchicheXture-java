@@ -15,6 +15,8 @@ public interface UserRepository<USER extends User> extends BaseRepository<USER> 
    */
   USER findUserByToken(String token);
 
+  boolean userExists(String username);
+
   /**
    * Find a USER by its username and password. This will also generate a token, if there is none.
    */

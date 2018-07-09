@@ -1,9 +1,7 @@
 package at.chex.archichexture.example.ctrl;
 
-import at.chex.archichexture.annotation.TokenSecured;
 import at.chex.archichexture.example.model.Example;
 import at.chex.archichexture.example.repository.ExampleRepository;
-import at.chex.archichexture.extension.token.NotNullOrEmptyTokenCheck;
 import at.chex.archichexture.repository.BaseRepository;
 import at.chex.archichexture.rest.TokenBaseRestController;
 import javax.annotation.PostConstruct;
@@ -41,7 +39,6 @@ public class ReadWriteExampleController extends TokenBaseRestController<Example>
   @GET
   @Path("/secured")
   @Produces(MediaType.APPLICATION_JSON)
-  @TokenSecured(checkClass = NotNullOrEmptyTokenCheck.class)
   public Response getSecuredResult() {
     return Response.ok(true).build();
   }

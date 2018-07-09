@@ -10,10 +10,10 @@ import java.net.HttpURLConnection;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import org.slf4j.Logger;
@@ -60,7 +60,7 @@ public abstract class AbstractUserController<USER extends User> extends
   @GET
   @Path("/self")
   @Produces(MediaType.APPLICATION_JSON)
-  public USER selfData(@QueryParam(Defines.KEYWORD_TOKEN) String token) {
+  public USER selfData(@HeaderParam(Defines.KEYWORD_TOKEN) String token) {
     if (Strings.isNullOrEmpty(token)) {
       throw new WebApplicationException(HttpURLConnection.HTTP_FORBIDDEN);
     }
@@ -74,7 +74,7 @@ public abstract class AbstractUserController<USER extends User> extends
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public USER resetCustomerPassword(@QueryParam(Defines.KEYWORD_TOKEN) String token,
+  public USER resetCustomerPassword(@HeaderParam(Defines.KEYWORD_TOKEN) String token,
       UsernameAndPassword usernameAndPassword) {
     USER user = getEntityRepository().findUserByToken(token);
     if (null == user) {

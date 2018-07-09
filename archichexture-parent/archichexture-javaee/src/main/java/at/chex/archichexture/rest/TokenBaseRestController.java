@@ -2,12 +2,15 @@ package at.chex.archichexture.rest;
 
 import at.chex.archichexture.model.BaseEntity;
 import at.chex.archichexture.token.TokenCheck;
+import com.google.common.base.Strings;
 import java.net.HttpURLConnection;
 import java.util.List;
+import javax.annotation.Nonnull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -60,14 +63,15 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity> extends
       @DefaultValue("50") @QueryParam("limit") int limit,
       @DefaultValue("0") @QueryParam("offset") int offset,
       @QueryParam(value = "reset_token") @DefaultValue("true") boolean resetTokenTimes,
-      @QueryParam(value = "token") String token) {
+      @QueryParam(value = "token") String queryToken,
+      @HeaderParam(value = "token") String headerToken) {
 
-    log.trace("GET:/ with Parameters. reset_token:{}, token:{}, limit:{}, offset:{}",
-        resetTokenTimes, token, limit, offset);
+    log.trace("GET:/ with Parameters. reset_token:{}, limit:{}, offset:{}",
+        resetTokenTimes, limit, offset);
 
-    tokenCheck(token, resetTokenTimes);
-
-    return internalGETListRequest(info, token, limit, offset);
+    return internalGETListRequest(info,
+        Strings.isNullOrEmpty(headerToken) ? queryToken : headerToken, resetTokenTimes, limit,
+        offset);
   }
 
   /**
@@ -85,8 +89,19 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity> extends
   /**
    * Process the GET List Request here.
    */
-  @SuppressWarnings("WeakerAccess")
+  @SuppressWarnings({"WeakerAccess", "unused"})
   protected List<ENTITY> internalGETListRequest(UriInfo info, String token, int limit, int offset) {
+    return internalGETListRequest(info, token, true, limit, offset);
+  }
+
+  /**
+   * Process the GET List Request here.
+   */
+  @SuppressWarnings("WeakerAccess")
+  protected List<ENTITY> internalGETListRequest(UriInfo info, String token, boolean resetTokenTimes,
+      int limit, int offset) {
+    tokenCheck(token, resetTokenTimes);
+
     log.trace("Incoming LIST request for token {}", token);
 
     return super.internalGETListRequest(info, limit, offset);
@@ -98,20 +113,30 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity> extends
   public ENTITY executeGetRequest(
       @PathParam("id") Long id,
       @QueryParam(value = "reset_token") @DefaultValue("true") boolean resetTokenTimes,
-      @QueryParam(value = "token") String token) {
+      @QueryParam(value = "token") String queryToken,
+      @HeaderParam(value = "token") String headerToken) {
 
-    log.trace("GET:/id with Parameters. id:{}, reset_token:{}, token:{}", id, resetTokenTimes,
-        token);
+    log.trace("GET:/id with Parameters. id:{}, reset_token:{}", id, resetTokenTimes);
 
-    tokenCheck(token, resetTokenTimes);
-    return internalGETRequest(id, token);
+    return internalGETRequest(id, Strings.isNullOrEmpty(headerToken) ? queryToken : headerToken,
+        resetTokenTimes);
+  }
+
+  /**
+   * Execute the GET Request for the given id/token
+   */
+  @SuppressWarnings({"WeakerAccess", "unused"})
+  protected ENTITY internalGETRequest(Long id, String token) {
+    return internalGETRequest(id, token, true);
   }
 
   /**
    * Execute the GET Request for the given id/token
    */
   @SuppressWarnings("WeakerAccess")
-  protected ENTITY internalGETRequest(Long id, String token) {
+  protected ENTITY internalGETRequest(Long id, String token, boolean resetTokenTimes) {
+    tokenCheck(token, resetTokenTimes);
+
     log.trace("Incoming request for id {} with token {}", id, token);
     return super.internalGETRequest(id);
   }
@@ -123,18 +148,33 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity> extends
   public ENTITY executePUTRequest(
       ENTITY formParam,
       @QueryParam(value = "reset_token") @DefaultValue("true") boolean resetTokenTimes,
-      @QueryParam(value = "token") String token) {
+      @QueryParam(value = "token") String queryToken,
+      @HeaderParam(value = "token") String headerToken) {
+    log.trace("PUT:/ (create) with Parameters. dto:{}, reset_token:{}", formParam,
+        resetTokenTimes);
+
+    return internalExecutePUTRequest(Strings.isNullOrEmpty(headerToken) ? queryToken : headerToken,
+        resetTokenTimes, formParam);
+  }
+
+  /**
+   * Execute PUT
+   */
+  @SuppressWarnings("WeakerAccess")
+  @Nonnull
+  protected ENTITY internalExecutePUTRequest(String token, boolean resetTokenTimes,
+      @Nonnull ENTITY formParam) {
     if (this.isReadonlyController()) {
       log.warn("Tried to PUT on a readonly controller!");
-      throw new WebApplicationException(HttpURLConnection.HTTP_FORBIDDEN);
+      throw new WebApplicationException(HttpURLConnection.HTTP_BAD_REQUEST);
     }
-    log.trace("PUT:/ (create) with Parameters. dto:{}, reset_token:{}, token:{}", formParam,
-        resetTokenTimes, token);
 
     tokenCheck(token, resetTokenTimes);
 
-    return internalExecutePUTRequest(formParam);
+    log.debug("Create entity for token {}. FormParams: {}", token, formParam);
+    return super.internalExecutePUTRequest(formParam);
   }
+
 
   @POST
   @Path("/{id}")
@@ -144,25 +184,33 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity> extends
       @PathParam("id") Long id,
       ENTITY formParam,
       @QueryParam(value = "reset_token") @DefaultValue("true") boolean resetTokenTimes,
-      @QueryParam(value = "token") String token) {
+      @QueryParam(value = "token") String queryToken,
+      @HeaderParam(value = "token") String headerToken) {
+    log.trace("POST:/id with Parameters. id:{}, dto:{}, reset_token:{}", id, formParam,
+        resetTokenTimes);
 
-    if (this.isReadonlyController()) {
-      log.warn("Tried to POST on a readonly controller!");
-      throw new WebApplicationException(HttpURLConnection.HTTP_BAD_REQUEST);
-    }
-    log.trace("POST:/id with Parameters. id:{}, dto:{}, reset_token:{}, token:{}", id, formParam,
-        resetTokenTimes, token);
+    return internalExecutePOSTRequest(id,
+        Strings.isNullOrEmpty(headerToken) ? queryToken : headerToken, resetTokenTimes, formParam);
+  }
 
-    tokenCheck(token, resetTokenTimes);
-
-    return internalExecutePOSTRequest(id, token, formParam);
+  @SuppressWarnings({"WeakerAccess", "unused"})
+  protected ENTITY internalExecutePOSTRequest(Long id, String token, ENTITY formParam) {
+    return internalExecutePOSTRequest(id, token, true, formParam);
   }
 
   /**
    * Process the update-entity event
    */
   @SuppressWarnings("WeakerAccess")
-  protected ENTITY internalExecutePOSTRequest(Long id, String token, ENTITY formParam) {
+  protected ENTITY internalExecutePOSTRequest(Long id, String token, boolean resetTokenTimes,
+      ENTITY formParam) {
+    if (this.isReadonlyController()) {
+      log.warn("Tried to POST on a readonly controller!");
+      throw new WebApplicationException(HttpURLConnection.HTTP_BAD_REQUEST);
+    }
+
+    tokenCheck(token, resetTokenTimes);
+
     log.debug("Update entity with id {} for token {}. FormParams: {}", id, token, formParam);
     return super.internalExecutePOSTRequest(id, formParam);
   }
@@ -178,16 +226,16 @@ public abstract class TokenBaseRestController<ENTITY extends BaseEntity> extends
   public Boolean executeDELETERequest(
       @PathParam("id") Long id,
       @QueryParam(value = "reset_token") @DefaultValue("true") boolean resetTokenTimes,
-      @QueryParam(value = "token") String token) {
+      @QueryParam(value = "token") String queryToken,
+      @HeaderParam(value = "token") String headerToken) {
 
     if (this.isReadonlyController()) {
       log.warn("Tried to DELETE on a readonly controller!");
       throw new WebApplicationException(HttpURLConnection.HTTP_BAD_REQUEST);
     }
 
-    tokenCheck(token, resetTokenTimes);
-
-    return internalExecuteDELETERequest(id, token, resetTokenTimes);
+    return internalExecuteDELETERequest(id,
+        Strings.isNullOrEmpty(headerToken) ? queryToken : headerToken, resetTokenTimes);
   }
 
   /**

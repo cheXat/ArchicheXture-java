@@ -1,5 +1,6 @@
 package at.chex.archichexture.model;
 
+import at.chex.archichexture.Exposable;
 import at.chex.archichexture.HasId;
 import at.chex.archichexture.annotation.Aspect;
 import at.chex.archichexture.annotation.Exposed;
@@ -24,9 +25,9 @@ import javax.xml.bind.annotation.XmlElement;
  * @version 1.0
  * @since 24/03/2017
  */
-@Serialized(exposeNested = ExposureType.BOTH, idAppendix = "_id")
+@Serialized(exposeNested = ExposureType.BOTH, idAppendix = Serialized.DEFAULT_ID_APPENDIX)
 @MappedSuperclass
-public abstract class BaseEntity implements HasId, Serializable {
+public abstract class BaseEntity implements HasId, Exposable, Serializable {
 
   private static final long serialVersionUID = 1L;
   /**

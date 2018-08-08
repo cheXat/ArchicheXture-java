@@ -1,5 +1,6 @@
 package at.chex.archichexture.message;
 
+import at.chex.archichexture.Exposable;
 import at.chex.archichexture.annotation.Serialized;
 import at.chex.archichexture.model.BaseEntity;
 import at.chex.archichexture.slh.Reflection;
@@ -36,7 +37,7 @@ import org.slf4j.LoggerFactory;
 @Dependent
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class JsonMessageBodyHandler<TYPE extends BaseEntity> implements MessageBodyReader<TYPE>,
+public class JsonMessageBodyHandler<TYPE extends Exposable> implements MessageBodyReader<TYPE>,
     MessageBodyWriter<TYPE> {
 
   private static final Logger log = LoggerFactory.getLogger(JsonMessageBodyHandler.class);

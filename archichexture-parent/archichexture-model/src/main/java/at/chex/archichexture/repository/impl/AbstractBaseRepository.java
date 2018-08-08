@@ -5,9 +5,10 @@ import at.chex.archichexture.annotation.AlternativeNames;
 import at.chex.archichexture.annotation.Aspect;
 import at.chex.archichexture.annotation.Exposed;
 import at.chex.archichexture.annotation.RemoveOnDelete;
+import at.chex.archichexture.annotation.Serialized;
+import at.chex.archichexture.annotation.Serialized.ExposureType;
 import at.chex.archichexture.model.BaseEntity;
 import at.chex.archichexture.model.DocumentedEntity;
-import at.chex.archichexture.model.QBaseEntity;
 import at.chex.archichexture.repository.BaseRepository;
 import at.chex.archichexture.slh.Reflection;
 import at.chex.archichexture.slh.Values;
@@ -17,6 +18,7 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.dsl.EntityPathBase;
+import com.querydsl.core.types.dsl.NumberPath;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.lang.reflect.Field;
@@ -28,10 +30,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.persistence.EntityManager;
 import org.slf4j.Logger;
@@ -375,7 +380,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
         Aspect aspect = field.getAnnotation(Aspect.class);
         log.trace("Processing aspect for Field:{}", field);
         if (aspect.filterable()) {
-          List<String> filterNames = new ArrayList<>();
+          Set<String> filterNames = new HashSet<>();
 
           if (field.isAnnotationPresent(AlternativeNames.class)) {
             AlternativeNames alternativeNames = field.getAnnotation(AlternativeNames.class);
@@ -384,14 +389,43 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
 
           String name = field.getName();
           filterNames.add(name);
+
+          String idAppendix = null;
+
+          if (clazz.isAnnotationPresent(Serialized.class)) {
+            Serialized serialized = clazz.getAnnotation(Serialized.class);
+            if (ExposureType.ID.equals(serialized.exposeNested()) ||
+                ExposureType.BOTH.equals(serialized.exposeNested())) {
+              idAppendix = serialized.idAppendix();
+              String finalIdAppendix = idAppendix;
+              filterNames.addAll(filterNames.stream().filter(Objects::nonNull)
+                  .map(s -> s.concat(finalIdAppendix)).collect(Collectors.toList()));
+            }
+          }
+
           Set<String> valuesForKeys = Values.getValuesForKeys(arguments, filterNames);
           if (!valuesForKeys.isEmpty()) {
             EntityPathBase<ENTITY> entityPath = getEntityPath();
             try {
-              Field fieldDefinition = entityPath.getClass().getField(name);
+              boolean isIdValue = false;
+              Field fieldDefinition;
+              try {
+                //
+                for (String value : valuesForKeys) {
+                  Long.parseLong(value);
+                }
+                fieldDefinition = entityPath.getClass().getField(name.concat(".id"));
+                isIdValue = true;
+              } catch (NumberFormatException nfe) {
+                // this just means, it's not an ID, but maybe a complex object instead
+                fieldDefinition = entityPath.getClass().getField(name);
+                isIdValue = false;
+              }
+
               Object fieldFromEntity = fieldDefinition.get(entityPath);
               String methodToInvoke =
-                  !aspect.strict() && field.getType().equals(String.class) ? METHOD_LIKE
+                  !isIdValue && !aspect.strict() && field.getType().equals(String.class)
+                      ? METHOD_LIKE
                       : METHOD_EQUALS;
               if (valuesForKeys.size() > 1) {
                 methodToInvoke = METHOD_IN;
@@ -501,7 +535,7 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
     }
 
     // Execute the query
-    List<ENTITY> returnList = new ArrayList<>(addAdditionalQueryAttributes(
+    List<ENTITY> returnList = new ArrayList<ENTITY>(addAdditionalQueryAttributes(
         query).fetch());
     if (null != queryAttributes.get(ARGUMENT_ENTITY_ID)) {
       List<ENTITY> idList = new ArrayList<>();
@@ -537,14 +571,27 @@ public abstract class AbstractBaseRepository<ENTITY extends BaseEntity> implemen
     if (getPermanentQueryAttributes().size() < 1) {
       // we can use the cached entitymanager entity only, when there are no additional arguments
       ENTITY entity = getEntityManager().find(getEntityClass(), id);
-      ENTITY returnEntity = isActiveEntity(entity) ? entity : null;
-      log.debug("Returning entity {}", returnEntity);
-      return returnEntity;
+      if (null != entity) {
+        ENTITY returnEntity = isActiveEntity(entity) ? entity : null;
+        log.debug("Returning entity {}", returnEntity);
+        return returnEntity;
+      }
     }
 
     JPAQuery<ENTITY> query = query().selectFrom(entityPath)
-        .where(((QBaseEntity) entityPath).id.eq(id))
         .where(getActivePredicate(true));
+
+    try {
+      Field idField = entityPath.getClass().getDeclaredField("id");
+      if (!idField.isAccessible()) {
+        idField.setAccessible(true);
+      }
+      NumberPath<Long> idPath = (NumberPath<Long>) idField.get(entityPath);
+      query.where(idPath.eq(id));
+    } catch (NoSuchFieldException | IllegalAccessException e) {
+      log.warn("No ID Field found in Entity {}", entityPath);
+      return null;
+    }
 
     if (getPermanentQueryAttributes().size() > 0) {
       query.where(getPredicateForQueryArgumentsMap(getPermanentQueryAttributes())

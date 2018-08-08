@@ -1,5 +1,6 @@
 package at.chex.archichexture.slh;
 
+import at.chex.archichexture.Exposable;
 import at.chex.archichexture.HasId;
 import at.chex.archichexture.annotation.AlternativeNames;
 import at.chex.archichexture.annotation.Aspect;
@@ -9,8 +10,11 @@ import at.chex.archichexture.annotation.Exposed.Visibility;
 import at.chex.archichexture.annotation.Serialized;
 import at.chex.archichexture.annotation.Serialized.ExposureType;
 import com.google.common.base.Strings;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -321,7 +325,8 @@ public class Reflection {
     Class<?> classToWorkWith = left.getClass();
     Serialized serializedClassAnnotation = getAnnotation(classToWorkWith, Serialized.class);
     if (null == serializedClassAnnotation) {
-      throw new RuntimeException("Cannot serialize Class without Serialized Annotation present!");
+      throw new RuntimeException("Cannot serialize Class " + classToWorkWith.getSimpleName()
+          + " without Serialized Annotation present!");
     }
 
     // loop through the class hierarchy
@@ -330,7 +335,8 @@ public class Reflection {
       for (Field fieldToSetOnEntity : classToWorkWith.getDeclaredFields()) {
 
         // check for @Aspect annotations
-        if (fieldToSetOnEntity.isAnnotationPresent(Aspect.class)) {
+        if (fieldToSetOnEntity.isAnnotationPresent(Aspect.class) || fieldToSetOnEntity
+            .isAnnotationPresent(Exposed.class)) {
           if (!fieldToSetOnEntity.isAnnotationPresent(Exposed.class) || fieldToSetOnEntity
               .getAnnotation(Exposed.class).exposure().equals(Visibility.PUBLIC)) {
             String keyName = fieldToSetOnEntity.getName();
@@ -351,45 +357,49 @@ public class Reflection {
               fieldToSetOnEntity.setAccessible(true);
               Object object = fieldToSetOnEntity.get(left);
               if (null != object) {
-                if (object instanceof HasId) { // if this is an object, we can actually handle. All ArchicheXture Entities inherit HasId anyway
-                  if (exposure.equals(Exposure.ID) || (
-                      exposure.equals(Exposure.DEFAULT) &&
-                          (ExposureType.ID.equals(serializedClassAnnotation.exposeNested()) ||
-                              ExposureType.BOTH.equals(serializedClassAnnotation.exposeNested()))
-                  )) {
-                    // only append "_id" if the name is not overridden OR if both (id AND object) are exposed
-                    String keyNameToSet = exposureNameOverridden && !ExposureType.BOTH
-                        .equals(serializedClassAnnotation.exposeNested()) ? keyName
-                        : keyName + serializedClassAnnotation.idAppendix();
-                    jsonObject.addProperty(keyNameToSet,
-                        ((HasId) object).getId());
+
+                ExposureType exposeNested = serializedClassAnnotation.exposeNested();
+                if (object instanceof Collection) {
+                  JsonArray array = new JsonArray();
+                  for (Object obj : (Collection) object) {
+                    array.add(serializeObjectToJson(obj, exposure, exportIfEmpty, false,
+                        obj.getClass()));
                   }
-                  if (exposure.equals(Exposure.OBJECT) || (
-                      exposure.equals(Exposure.DEFAULT) &&
-                          (ExposureType.FULL.equals(serializedClassAnnotation.exposeNested()) ||
-                              ExposureType.BOTH.equals(serializedClassAnnotation.exposeNested()))
-                  )) {
-                    jsonObject.add(keyName,
-                        transferValuesToJson(fieldToSetOnEntity.getType().cast(object),
-                            new JsonObject()));
-                  }
+                  jsonObject.add(keyName, array);
                 } else {
-                  if (object instanceof Number) {
-                    jsonObject.addProperty(keyName, (Number) object);
-                  } else if (object instanceof Boolean) {
-                    jsonObject.addProperty(keyName, (Boolean) object);
-                  } else if (object instanceof Character) {
-                    jsonObject.addProperty(keyName, (Character) object);
-                  } else {
-                    // try string if unknown
-                    String stringValue = String.valueOf(object);
-                    if (!Strings.isNullOrEmpty(stringValue)) {
-                      jsonObject.addProperty(keyName, stringValue);
-                    } else if (exportIfEmpty) {
-                      jsonObject.addProperty(keyName, "");
+                  boolean serialized = false;
+                  if (Exposure.ID.equals(exposure) || (
+                      Exposure.DEFAULT.equals(exposure) &&
+                          (ExposureType.ID.equals(exposeNested) ||
+                              ExposureType.BOTH.equals(exposeNested))
+                  )) {
+                    if (object instanceof HasId) {
+                      String keyNameToSet =
+                          exposureNameOverridden && !ExposureType.BOTH.equals(exposeNested)
+                              ? keyName
+                              : keyName + serializedClassAnnotation.idAppendix();
+                      jsonObject
+                          .add(keyNameToSet, serializeObjectToJson(object, exposure, exportIfEmpty,
+                              true, fieldToSetOnEntity.getType()));
+                      serialized = true;
                     }
                   }
+                  if (Exposure.OBJECT.equals(exposure) || (
+                      Exposure.DEFAULT.equals(exposure) &&
+                          (ExposureType.FULL.equals(exposeNested) ||
+                              ExposureType.BOTH.equals(exposeNested))
+                  )) {
+                    jsonObject.add(keyName, serializeObjectToJson(object, exposure, exportIfEmpty,
+                        false, fieldToSetOnEntity.getType()));
+                    serialized = true;
+                  }
+                  if (!serialized) {
+                    jsonObject.add(keyName, serializeObjectToJson(object, exposure, exportIfEmpty,
+                        false, fieldToSetOnEntity.getType()));
+                  }
                 }
+
+
               } else if (exportIfEmpty) {
                 jsonObject.add(keyName, null);
               }
@@ -401,6 +411,35 @@ public class Reflection {
       }
     } while (null != (classToWorkWith = classToWorkWith.getSuperclass()));
     return jsonObject;
+  }
+
+  private static JsonElement serializeObjectToJson(Object object, Exposure exposure,
+      boolean exportIfEmpty, boolean objectAsId, Class<?> objectAsClass) {
+    if (object instanceof Exposable) { // if this is an object, we can actually handle. All ArchicheXture Entities inherit HasId anyway
+      if (objectAsId) {
+        return new JsonPrimitive(((HasId) object).getId());
+      } else {
+        return
+            transferValuesToJson(objectAsClass.cast(object), new JsonObject());
+      }
+    } else {
+      if (object instanceof Number) {
+        return new JsonPrimitive((Number) object);
+      } else if (object instanceof Boolean) {
+        return new JsonPrimitive((Boolean) object);
+      } else if (object instanceof Character) {
+        return new JsonPrimitive((Character) object);
+      } else {
+        // try string if unknown
+        String stringValue = String.valueOf(object);
+        if (!Strings.isNullOrEmpty(stringValue)) {
+          return new JsonPrimitive(stringValue);
+        } else if (exportIfEmpty) {
+          return JsonNull.INSTANCE;
+        }
+      }
+    }
+    return null;
   }
 
   /**
